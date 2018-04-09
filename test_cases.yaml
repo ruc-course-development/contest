@@ -1,0 +1,12 @@
+executable:
+test-cases:
+    standard:
+        executable:
+        argv: []
+        stdin: []
+        stdout: |
+        stderr: |
+        ofstreams:
+            - file-name: 
+              test-file: 
+        extra-tests: []
