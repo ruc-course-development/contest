@@ -1,0 +1,14 @@
+executable: examples\native_console_app\main.exe
+test-cases:
+    standard:
+        executable:
+        argv: []
+        stdin: ["Lnk2past"]
+        stdout: |
+          Hello! What is your name?
+          Welcome to the world, Lnk2past!
+        stderr: |
+        ofstreams:
+            - file-name: 
+              test-file: 
+        extra-tests: []
