@@ -2,6 +2,7 @@
 
 import argparse
 import importlib.util
+import logging
 import os
 import re
 import subprocess
@@ -18,6 +19,7 @@ def import_from_source(path, add_to_modules=False):
 
     :param path: path to the source file. may be relative.
     :param add_to_modules: indicate whether to not to add to sys.modules
+    :return: 
     """
     module_name = os.path.splitext(os.path.basename(path))[1]
     spec = importlib.util.spec_from_file_location(module_name, path)
@@ -33,36 +35,38 @@ class TestCase():
         """
         Initialize test case inputs
 
-        :param case_name:
-        :param exe:
-        :param argv:
-        :param stdin:
-        :param stdout:
-        :param stderr:
-        :param ofstreams:
-        :param extra_tests:
+        :param case_name: name of the test
+        :param exe: executable to test
+        :param argv: list of command line arguments
+        :param stdin: list of inputs that are passed to stdin
+        :param stdout: expected output to stdout
+        :param stderr: expected output to stderr
+        :param ofstreams: list of pairs of file names and content
+        :param extra_tests: list of additional modules to load for testing
         """
         logging.debug('Constructing test case {}'.format(case_name))
-
-        self.case_name = case_name.decode('string_escape')
+        self.case_name = case_name
         self.exe = exe
-        self.argv = [a.decode('string_escape') for a in argv]
-        self.stdin = [i.decode('string_escape') for i in stdin]
-        self.stdout = stdout.decode('string_escape')
-        self.stderr = stderr.decode('string_escape')
+        self.argv = [a for a in argv]
+        self.stdin = [i for i in stdin]
+        self.stdout = stdout
+        self.stderr = stderr
         self.ofstreams = ofstreams
         self.extra_tests = extra_tests
 
     def execute(self):
-        '''
-        '''
-        print('Executing {} test case:'.format(self.case_name))
+        """
+        Execute the test
+
+        :return: number of errors encountered
+        """
+        logging.info('Executing {} test case:'.format(self.case_name))
 
         test_args = [self.exe]
         test_args.extend(self.argv)
-
-        proc = subprocess.Popen(test_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = proc.communicate('\n'.join(self.stdin))
+        stdin = '\n'.join(self.stdin)
+        proc = subprocess.Popen(test_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        stdout, stderr = proc.communicate(input=stdin)
         
         errors = 0
         errors += self.check_streams('stdout', self.stdout, stdout)
@@ -77,20 +81,28 @@ class TestCase():
                         errors += self.check_streams(file_name, tfile.read(), pfile.read())
 
         for extra_test in self.extra_tests:
-            print('    Executing: {}'.format(extra_test))
+            logging.info('    Executing: {}'.format(extra_test))
             extra_test = import_from_source(extra_test)
             if not extra_test.test():
                 errors += 1
-                print('    Failed!')
+                logging.warn('    Failed!')
         
         return errors
                 
     @staticmethod
     def check_streams(stream, expected, received):
-        print('    Executing {} stream test'.format(stream))
+        """
+        Compares two output streams, line by line
+
+        :param stream: name of stream being tested
+        :param expected: expected content of stream
+        :param received: stream output from the test
+        :return: 0 for no errror, 1 for error
+        """
+        logging.info('    Executing {} stream test'.format(stream))
         for e, r in zip(re.split('\n+', expected), re.split('\n+', received)): 
             if e != r:
-                print('    Failure:\n        Expected "{}"\n        Received "{}"'.format(e, r))
+                logging.warn('    Failure:\n        Expected "{}"\n        Received "{}"'.format(e, r))
                 return 1
         return 0
 
@@ -121,8 +133,7 @@ def test():
     for test in test_cases:
         errors += test.execute()
         
-    print('=======================================================================')
-    print('{} errors found!'.format(errors if errors else 'No'))
+    logging.info('{} errors found!'.format(errors if errors else 'No'))
 
 if __name__ == '__main__':
     test()
