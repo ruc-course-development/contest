@@ -17,7 +17,8 @@ logger_format_fields = {
     'test_case': __file__
 }
 
-def setup_logger(level):
+
+def setup_logger(is_verbose):
     """
     Configure the logger for contest.py
 
@@ -25,14 +26,11 @@ def setup_logger(level):
     :return:
     """
     verbosity_mapping = {
-        1:logging.CRITICAL,
-        2:logging.ERROR,
-        3:logging.WARNING,
-        4:logging.INFO,
-        5:logging.DEBUG
+        False:logging.CRITICAL,
+        True:logging.DEBUG
     }
 
-    level = verbosity_mapping[level]
+    level = verbosity_mapping[is_verbose]
 
     class Formatter(logging.Formatter):
         def format(self, record):
@@ -114,10 +112,13 @@ class TestCase():
 
         test_args = [self.exe]
         test_args.extend(self.argv)
-        stdin = '\n'.join(self.stdin)
+
+        cwd = os.path.dirname(self.exe)
 
         logger.debug('Running: {}'.format(test_args))
-        proc = subprocess.Popen(test_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        proc = subprocess.Popen(test_args, cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+        stdin = '\n'.join(self.stdin)
         stdout, stderr = proc.communicate(input=stdin)
         
         errors = 0
@@ -128,16 +129,18 @@ class TestCase():
             test_file = ofstream['test-file']
             file_name = ofstream['file-name']
             if test_file and file_name:
+                test_file = os.path.join(cwd, test_file)
+                file_name = os.path.join(cwd, file_name)
                 with open(test_file, 'r') as tfile:
                     with open(file_name, 'r') as pfile:
                         errors += self.check_streams(file_name, tfile.read(), pfile.read())
 
         for extra_test in self.extra_tests:
-            logger.info('    Executing: {}'.format(extra_test))
+            logger.debug('Running extra test: {}'.format(extra_test))
             extra_test = import_from_source(extra_test)
             if not extra_test.test():
                 errors += 1
-                logger.warning('    Failed!')
+                logger.critical('Failed!')
         
         if not errors:
             logger.critical('OK!')
@@ -154,7 +157,7 @@ class TestCase():
         :param received: stream output from the test
         :return: 0 for no errror, 1 for error
         """
-        logger.info('Comparing {} streams line by line'.format(stream))
+        logger.debug('Comparing {} streams line by line'.format(stream))
         for line_number, (e, r) in enumerate(zip(re.split('\n+', expected), re.split('\n+', received))):
             logger.debug('{} line {}:\n"{}"\n"{}"\n'.format(stream, line_number, e, r))
             if e != r:
@@ -168,14 +171,40 @@ class TestCase():
                             if not a == b:
                                 i = i + idx
                                 break
+                        else:
+                            i = i + min(len(s1), len(s2))
                         break
 
                     i = i + 5
                 error_location = (' '*i) + '^ ERROR'
-                logger.error('FAILURE:\n        Expected "{}"\n        Received "{}"\n                  {}'.format(e, r, error_location))
+                logger.critical('FAILURE:\n        Expected "{}"\n        Received "{}"\n                  {}'.format(e, r, error_location))
 
                 return 1
         return 0
+
+
+def filter_tests(case_name, includes, excludes):
+    """
+    Check if the input case is valid
+
+    :param case_name: name of case
+    :param includes: list of regex patterns to check against
+    :param excludes: list of regex patterns to check against
+    :return: True is valid, False otherwise
+    """
+    for re_filter in excludes:
+        if re.search(re_filter, case_name):
+            logger.debug('Excluding {}, matches pattern {}'.format(case_name, re_filter))
+            return False
+
+    if not includes:
+        return True
+
+    for re_filter in includes:
+        if re.search(re_filter, case_name):
+            logger.debug('Including {}, matches pattern {}'.format(case_name, re_filter))
+            return True
+    return False
 
 
 def test():
@@ -186,22 +215,29 @@ def test():
     """
     parser = argparse.ArgumentParser(__file__)
     parser.add_argument('configuration', help='path to a YAML test configuration file')
-    parser.add_argument('--verbosity', choices=[1, 2, 3, 4, 5], default=3, type=int, help='logging verbosity, 1=low, 5=high')
+    parser.add_argument('--filters', default=[], nargs='+', help='regex pattern for tests to match')    
+    parser.add_argument('--exclude-filters', default=[], nargs='+', help='regex pattern for tests to match')    
+    parser.add_argument('--verbose', action='store_true', default=False, help='verbose output')
     parser.add_argument('--version', action='version', version='contest.py v{}'.format(__version__))
     inputs = parser.parse_args()
 
-    setup_logger(inputs.verbosity)
+    setup_logger(inputs.verbose)
 
     logger.critical('Loading {}'.format(inputs.configuration))
     test_matrix = yaml.load(open(inputs.configuration, 'r'))
     executable = test_matrix['executable']
-    test_cases = []
 
     number_of_tests = len(test_matrix['test-cases'])
     logger.critical('Found {} tests'.format(number_of_tests))
-    for test_case in test_matrix['test-cases']:
+
+    test_cases = [case for case in test_matrix['test-cases'] if filter_tests(case, inputs.filters, inputs.exclude_filters)]
+    number_of_tests_to_run = len(test_cases)
+    logger.critical('Running {} tests'.format(number_of_tests_to_run))
+
+    tests = []
+    for test_case in test_cases:
         test = test_matrix['test-cases'][test_case]
-        test_cases.append(TestCase(test_case,
+        tests.append(TestCase(test_case,
                                 executable if not test['executable'] else test['executable'],
                                 test['argv'],
                                 test['stdin'],
@@ -211,11 +247,11 @@ def test():
                                 test['extra-tests']))
 
     errors = 0
-    for test in test_cases:
+    for test in tests:
         errors += test.execute()
         logger_format_fields['test_case'] = __file__
 
-    logger.critical('{}/{} tests passed!'.format(number_of_tests-errors, number_of_tests))
+    logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run))
 
 if __name__ == '__main__':
     test()

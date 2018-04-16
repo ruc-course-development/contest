@@ -1,0 +1,12 @@
+executable: main.exe
+test-cases:
+    standard:
+        executable:
+        argv: ["7"]
+        stdin: []
+        stdout: |
+        stderr: |
+        ofstreams:
+            - file-name: test_sample.dat
+              test-file: sample.dat
+        extra-tests: []
