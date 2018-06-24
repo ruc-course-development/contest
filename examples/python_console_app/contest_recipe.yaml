@@ -1,0 +1,8 @@
+executable: python foobarbaz.py
+test-cases:
+    standard:
+        stdin: |
+            I want to be a Jedi
+        stdout: |
+            Hello World!
+            Let us make a wish! "I want to be a Jedi" is your wish? Keep dreaming

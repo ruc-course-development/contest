@@ -1,3 +1,10 @@
+// compile me with:
+// Visual Studio:
+//   cl /EHsc numbers.cpp /Femain.exe
+//
+// GCC g++:
+//   g++ numbers.cpp -o main.exe
+//
 #include <fstream>
 int main(int argc, char **argv)
 {

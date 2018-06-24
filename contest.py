@@ -8,10 +8,11 @@ import re
 import subprocess
 import sys
 import yaml
+
+
 sys.dont_write_bytecode=True
 
 __version__ = '0.1.0'
-
 logger = logging.getLogger(__name__)
 logger_format_fields = {
     'test_case': __file__
@@ -59,6 +60,18 @@ def setup_logger(is_verbose):
     logger = logging.LoggerAdapter(logger, logger_format_fields)
 
 
+class chdir:
+    """
+    """
+    def __init__(self, path):
+        self.old_path = os.getcwd()
+        self.new_path = path = path
+    def __enter__(self):
+        os.chdir(self.new_path)
+    def __exit__(self, type, value, traceback):
+        os.chdir(self.old_path)
+
+
 def import_from_source(path, add_to_modules=False):
     """
     Imports a Python source file using its path on the system.
@@ -77,7 +90,7 @@ def import_from_source(path, add_to_modules=False):
 
 
 class TestCase():
-    def __init__(self, case_name, exe, argv, stdin, stdout, stderr, ofstreams, extra_tests):
+    def __init__(self, case_name, exe, argv, stdin, stdout, stderr, ofstreams, extra_tests, test_home):
         """
         Initialize test case inputs
 
@@ -89,17 +102,40 @@ class TestCase():
         :param stderr: expected output to stderr
         :param ofstreams: list of pairs of file names and content
         :param extra_tests: list of additional modules to load for testing
-        :return:
+        :param test_home: directory to run the test out of
         """
         logger.debug('Constructing test case {}'.format(case_name))
         self.case_name = case_name
         self.exe = exe
         self.argv = [a for a in argv]
-        self.stdin = [i for i in stdin]
+        self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
         self.ofstreams = ofstreams
         self.extra_tests = extra_tests
+        self.test_home = test_home
+        os.makedirs(self.test_home, exist_ok=True)
+
+        self.test_args = self._setup_test_process()
+
+
+    def _setup_test_process(self):
+        """
+        Properly sets the relative paths for the executable and contructs the 
+        argument list for the executable.
+
+        :return: list of the executable and arguments to be passed to Popen
+        """
+        test_args = []
+        splexe = self.exe.split()
+        if len(splexe) == 1:
+            test_args.append(os.path.abspath(os.path.join(self.test_home, '..', '..', self.exe)))
+        elif len(splexe) == 2:
+            splexe[1] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[1]))
+            test_args.extend(splexe)
+        test_args.extend(self.argv)
+        return test_args
+
 
     def execute(self):
         """
@@ -110,43 +146,35 @@ class TestCase():
         logger_format_fields['test_case'] = 'test={}'.format(self.case_name)
         logger.critical('Starting test')
 
-        test_args = [self.exe]
-        test_args.extend(self.argv)
-
-        cwd = os.path.dirname(self.exe)
-
-        logger.debug('Running: {}'.format(test_args))
-        proc = subprocess.Popen(test_args, cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-
-        stdin = '\n'.join(self.stdin)
-        stdout, stderr = proc.communicate(input=stdin)
+        logger.debug('Running: {}'.format(self.test_args))
+        with chdir(self.test_home):
+            proc = subprocess.Popen(self.test_args, cwd=os.getcwd(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            stdout, stderr = proc.communicate(input=self.stdin)
         
-        errors = 0
-        errors += self.check_streams('stdout', self.stdout, stdout)
-        errors += self.check_streams('stderr', self.stderr, stderr)
+            errors = 0
+            errors += self.check_streams('stdout', self.stdout, stdout)
+            errors += self.check_streams('stderr', self.stderr, stderr)
 
-        for ofstream in self.ofstreams:
-            test_file = ofstream['test-file']
-            file_name = ofstream['file-name']
-            if test_file and file_name:
-                test_file = os.path.join(cwd, test_file)
-                file_name = os.path.join(cwd, file_name)
-                with open(test_file, 'r') as tfile:
-                    with open(file_name, 'r') as pfile:
+            for ofstream in self.ofstreams:
+                test_file = ofstream['test-file']
+                file_name = os.path.join('..', '..', ofstream['file-name'])
+                if test_file and file_name:
+                    with open(test_file, 'r') as tfile, open(file_name, 'r') as pfile:
                         errors += self.check_streams(file_name, tfile.read(), pfile.read())
 
-        for extra_test in self.extra_tests:
-            logger.debug('Running extra test: {}'.format(extra_test))
-            extra_test = import_from_source(extra_test)
-            if not extra_test.test():
-                errors += 1
-                logger.critical('Failed!')
-        
-        if not errors:
-            logger.critical('OK!')
+            for extra_test in self.extra_tests:
+                logger.debug('Running extra test: {}'.format(extra_test))
+                extra_test = import_from_source(extra_test)
+                if not extra_test.test():
+                    errors += 1
+                    logger.critical('Failed!')
+            
+            if not errors:
+                logger.critical('OK!')
 
         return int(errors>0)
-                
+
+
     @staticmethod
     def check_streams(stream, expected, received):
         """
@@ -208,11 +236,7 @@ def filter_tests(case_name, includes, excludes):
 
 
 def test():
-    """
-    Run the specified test configuration
-
-    :return:
-    """
+    """Run the specified test configuration"""
     parser = argparse.ArgumentParser(__file__)
     parser.add_argument('configuration', help='path to a YAML test configuration file')
     parser.add_argument('--filters', default=[], nargs='+', help='regex pattern for tests to match')    
@@ -238,13 +262,14 @@ def test():
     for test_case in test_cases:
         test = test_matrix['test-cases'][test_case]
         tests.append(TestCase(test_case,
-                                executable if not test['executable'] else test['executable'],
-                                test['argv'],
-                                test['stdin'],
-                                test['stdout'],
-                                test['stderr'],
-                                test['ofstreams'],
-                                test['extra-tests']))
+                              executable if not test.get('executable', '') else test['executable'],
+                              test.get('argv', []),
+                              test.get('stdin', ''),
+                              test.get('stdout', ''),
+                              test.get('stderr', ''),
+                              test.get('ofstreams', {}),
+                              test.get('extra-tests', []),
+                              os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case)))
 
     errors = 0
     for test in tests:
@@ -252,6 +277,7 @@ def test():
         logger_format_fields['test_case'] = __file__
 
     logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run))
+
 
 if __name__ == '__main__':
     test()
