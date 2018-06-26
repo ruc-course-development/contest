@@ -11,7 +11,10 @@ addons:
 install:
   - pip install -r requirements.txt
 script:
-  - mkdir -p examples/build && cd examples/build && cmake -G "Unix Makefiles" .. & cd ../..
+  - mkdir -p examples/build
+  - cd examples/build
+  - cmake -G "Unix Makefiles" ..
+  - cd ..
   - python contest.py examples/many_cases/contest_recipe.yaml
   - python contest.py examples/native_console_app/contest_recipe.yaml
   - python contest.py examples/output_file/contest_recipe.yaml
