@@ -1,4 +1,5 @@
-executable: main.exe
+executable: hello_world.exe
+build-step: mkdir build && cd build && cmake ..
 test-cases:
     standard:
         stdin: |

@@ -1,10 +1,3 @@
-// compile me with:
-// Visual Studio:
-//   cl /EHsc hello_world.cpp /Femain.exe
-//
-// GCC g++:
-//   g++ hello_world.cpp -o main.exe
-//
 #include <iostream>
 #include <string>
 int main()
