@@ -5,11 +5,12 @@ python:
   - "3.7-dev"  # 3.7 development branch
 before_install:
   - sudo apt-get install cmake
-  - ./.ci/travis/build_tests.sh
+  - chmod +x .ci/travis/*
+  - .ci/travis/build_tests.sh
 addons:
   apt:
     update: true
 install:
   - pip install -r requirements.txt
 script:
-  - ./.ci/travis/run_tests.sh
+  - .ci/travis/run_tests.sh
