@@ -1,4 +1,4 @@
-executable: main.exe
+executable: printnum.exe
 test-cases:
     one:
         stdin: |

@@ -1,4 +1,4 @@
-executable: main.exe
+executable: numbers.exe
 test-cases:
     standard:
         argv: ["7"]

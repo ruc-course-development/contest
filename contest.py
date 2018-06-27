@@ -277,7 +277,11 @@ def test():
         logger_format_fields['test_case'] = __file__
 
     logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run))
+    return errors
 
 
 if __name__ == '__main__':
-    test()
+    try:
+        sys.exit(test())
+    except Exception as e:
+        sys.exit('Something went horribly wrong. Go fix it... {}'.format(e))
