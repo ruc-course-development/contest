@@ -1,6 +1,8 @@
 # contest
 A CONsole application TESTer
 
+[![Build Status](https://travis-ci.org/Lnk2past/contest.svg?branch=master)](https://travis-ci.org/Lnk2past/contest)
+
 # intro
 I wrote this for a class that I teach to help with grading. contest consumes a yaml file that configures how it should interact with the inputs and outputs of the specified program.
 
