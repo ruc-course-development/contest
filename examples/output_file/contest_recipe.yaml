@@ -3,5 +3,5 @@ test-cases:
     standard:
         argv: ["7"]
         ofstreams:
-            - file-name: test_sample.dat
+            - base-file: contest_sample.dat
               test-file: sample.dat
