@@ -2,11 +2,12 @@ executable:
 test-cases:
     standard:
         executable:
+        returncode:
         argv: []
         stdin: []
         stdout: |
         stderr: |
         ofstreams:
-            - file-name: 
-              test-file: 
+            - base-file:
+              test-file:
         extra-tests: []

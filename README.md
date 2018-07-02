@@ -13,9 +13,7 @@ The user is able to define what is pumped into the program's stdin and then what
 # todo
 add configuration option for file output
 
-add return code checking
-
-add test recipe generator
+update readme with test generation instructions
 
 # details
 ## overview
