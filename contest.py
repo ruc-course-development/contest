@@ -291,7 +291,7 @@ class TestCase():
         self.exe = exe
         self.return_code = return_code
         self.argv = [a for a in argv]
-        self.stdin = stdin
+        self.stdin = '\n'.join(stdin)
         self.stdout = stdout
         self.stderr = stderr
         self.ofstreams = ofstreams
@@ -460,7 +460,7 @@ def test():
                                 executable if not test.get('executable', '') else test['executable'],
                                 test.get('return-code', None),
                                 test.get('argv', []),
-                                test.get('stdin', ''),
+                                test.get('stdin', []),
                                 test.get('stdout', ''),
                                 test.get('stderr', ''),
                                 test.get('ofstreams', {}),
