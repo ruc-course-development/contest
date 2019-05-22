@@ -1,25 +1,21 @@
-#!/usr/bin/python3
-
 import argparse
 import importlib.util
 import logging
 import os
 import re
-import shutil
-import subprocess
 import sys
-import threading
 import yaml
 from collections import OrderedDict
+from subprocess import Popen, PIPE
 
 
-sys.dont_write_bytecode=True
-
+sys.dont_write_bytecode = True
 __version__ = '0.1.0'
 logger = logging.getLogger(__name__)
 logger_format_fields = {
     'test_case': __file__
 }
+
 
 # https://stackoverflow.com/a/16782282
 def represent_ordereddict(dumper, data):
@@ -30,7 +26,9 @@ def represent_ordereddict(dumper, data):
         value.append((node_key, node_value))
     return yaml.nodes.MappingNode(u'tag:yaml.org,2002:map', value)
 
+
 yaml.add_representer(OrderedDict, represent_ordereddict)
+
 
 # https://stackoverflow.com/a/15423007
 def should_use_block(value):
@@ -39,10 +37,11 @@ def should_use_block(value):
             return True
     return False
 
+
 def my_represent_scalar(self, tag, value, style=None):
     if style is None:
         if should_use_block(value):
-             style='|'
+            style = '|'
         else:
             style = self.default_style
     node = yaml.representer.ScalarNode(tag, value, style=style)
@@ -50,155 +49,8 @@ def my_represent_scalar(self, tag, value, style=None):
         self.represented_objects[self.alias_key] = node
     return node
 
+
 yaml.representer.BaseRepresenter.represent_scalar = my_represent_scalar
-
-
-# https://stackoverflow.com/a/21912744
-def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
-    class OrderedLoader(Loader):
-        pass
-    def construct_mapping(loader, node):
-        loader.flatten_mapping(node)
-        return object_pairs_hook(loader.construct_pairs(node))
-    OrderedLoader.add_constructor(
-        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-        construct_mapping)
-    return yaml.load(stream, OrderedLoader)
-
-
-def record_test(command, test_name):
-    """
-    Record the input and output of the given command, placing it within a a
-    test recipe
-
-    :param command: list of strings forming a complete command to run
-    :param test_name: name to save the test results under
-    :return: 0 for success, otherwise return an error message
-    """
-    class RecorderPipe(threading.Thread):
-        """
-        Custom thread with a pipe for intercepting stdin ina  subprocess
-        """
-        def __init__(self):
-            """
-            Initialize the thread
-            """
-            threading.Thread.__init__(self)
-            self.daemon = True
-
-            self.lines = []
-            self.process = None
-
-            self.rd, self.wd = os.pipe()
-            self.rpipe = os.fdopen(self.rd)
-            self.wpipe = os.fdopen(self.wd, 'w')
-
-            self.start()
-
-        def fileno(self):
-            """
-            Returns the file descriptor of the read-end of the pipe
-
-            :return: file descriptor
-            """
-            return self.rd
-
-        def run(self):
-            """
-            Method for the running thread. Will yield until the external
-            subprocess is hooked in and will continuw while the write-end of the
-            pipe is open and the subprocess is still running.
-            """
-            while self.process is None:
-                pass
-
-            # TODO: potential race condition here? investigate later.
-            while self.wpipe is not None and self.process.poll() is None:
-                s = input()
-                self.wpipe.write(s + '\n')
-                self.wpipe.flush()
-                self.lines.append(s)
-                # TODO: is this necessary? investigate later.
-                self.check()
-
-        def check(self):
-            """
-            Check if the subprocess is opened, and if it is not, cleanup
-            """
-            if self.process.poll() is not None:
-                self.close()
-
-        def close(self):
-            """
-            Close both ends of the pipe and set the write-end to None
-            """
-            self.rpipe.close()
-            self.wpipe.close()
-            self.wpipe = None
-
-    def get_files(root):
-        files = []
-        for el in os.listdir(root):
-            full_path = os.path.join(root, el)
-            if os.path.isfile(full_path):
-                files.append(full_path)
-            else:
-                files.extend(get_files(full_path))
-        return files
-
-    logger.debug('Starting test with command "{}"'.format(command))
-    recorder_pipe = RecorderPipe()
-
-    files = set(get_files('.'))
-
-    proc = subprocess.Popen(command, stdin=recorder_pipe, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    recorder_pipe.process = proc
-    stdout, stderr = proc.communicate()
-    logger.debug('Test complete... writing to recipe...')
-
-    new_files = set(get_files('.')) - files
-
-    if os.path.exists('contest_recipe.yaml'):
-        with open('contest_recipe.yaml', 'r') as recipe:
-            test_recipe = ordered_load(recipe, yaml.SafeLoader)
-        if test_name in test_recipe['test-cases']:
-            return '{} is already a test case! Choose a new name!'.format(test_name)
-        test_recipe['test-cases'][test_name] = OrderedDict()
-        test_case = test_recipe['test-cases'][test_name]
-        if command[0] != test_recipe['executable']:
-            test_case['executable'] = command[0]
-    else:
-        test_recipe = OrderedDict()
-        test_recipe['executable'] = command[0]
-        test_recipe['test-cases'] = OrderedDict()
-        test_recipe['test-cases'][test_name] = OrderedDict()
-        test_case = test_recipe['test-cases'][test_name]
-
-    test_case['return-code'] = proc.returncode
-
-    argv = command[1:]
-    if argv:
-        test_case['argv'] = command[1:]
-    if recorder_pipe.lines:
-        test_case['stdin'] = recorder_pipe.lines
-    if stdout:
-        test_case['stdout'] = stdout
-    if stderr:
-        test_case['stderr'] = stderr
-
-    if new_files:
-        test_case['ofstreams'] = []
-        for new_file in new_files:
-            dir_name, file_name = os.path.split(new_file)
-            base_file = os.path.join(dir_name, 'contest_' + file_name)
-            shutil.move(new_file, base_file)
-            test_case['ofstreams'].append(OrderedDict())
-            test_case['ofstreams'][-1]['base-file'] = base_file
-            test_case['ofstreams'][-1]['test-file'] = new_file
-
-    recipe = open('contest_recipe.yaml', 'w')
-    yaml.dump(test_recipe, recipe)
-    return 0
 
 
 def setup_logger(is_verbose):
@@ -209,8 +61,8 @@ def setup_logger(is_verbose):
     :return:
     """
     verbosity_mapping = {
-        False:logging.CRITICAL,
-        True:logging.DEBUG
+        False: logging.CRITICAL,
+        True: logging.DEBUG
     }
 
     level = verbosity_mapping[is_verbose]
@@ -237,7 +89,7 @@ def setup_logger(is_verbose):
     ch.setLevel(level)
     formatter = Formatter()
     ch.setFormatter(formatter)
-    logger.addHandler(ch) # pylint: disable=E1101
+    logger.addHandler(ch)  # pylint: disable=E1101
     logger = logging.LoggerAdapter(logger, logger_format_fields)
 
 
@@ -248,8 +100,10 @@ class chdir:
     def __init__(self, path):
         self.old_path = os.getcwd()
         self.new_path = path = path
+
     def __enter__(self):
         os.chdir(self.new_path)
+
     def __exit__(self, type, value, traceback):
         os.chdir(self.old_path)
 
@@ -301,7 +155,6 @@ class TestCase():
 
         self.test_args = self._setup_test_process()
 
-
     def _setup_test_process(self):
         """
         Properly sets the relative paths for the executable and contructs the 
@@ -319,7 +172,6 @@ class TestCase():
         test_args.extend(self.argv)
         return test_args
 
-
     def execute(self):
         """
         Execute the test
@@ -331,7 +183,7 @@ class TestCase():
 
         logger.debug('Running: {}'.format(self.test_args))
         with chdir(self.test_home):
-            proc = subprocess.Popen(self.test_args, cwd=os.getcwd(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            proc = Popen(self.test_args, cwd=os.getcwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
             stdout, stderr = proc.communicate(input=self.stdin)
         
             errors = 0
@@ -355,12 +207,11 @@ class TestCase():
                 if not extra_test.test():
                     errors += 1
                     logger.critical('Failed!')
-            
+
             if not errors:
                 logger.critical('OK!')
 
-        return int(errors>0)
-
+        return int(errors > 0)
 
     @staticmethod
     def check_streams(stream, expected, received):
@@ -436,44 +287,38 @@ def test():
 
     setup_logger(inputs.verbose)
 
-    if inputs.generate:
-        if not inputs.new_test_name:
-            return 'You must specify --new-test-name <name> when generating a new test!'
-        
-        return record_test(inputs.generate, inputs.new_test_name)
-    else:
-        logger.critical('Loading {}'.format(inputs.configuration))
-        test_matrix = yaml.load(open(inputs.configuration, 'r'))
-        executable = test_matrix['executable']
+    logger.critical('Loading {}'.format(inputs.configuration))
+    test_matrix = yaml.load(open(inputs.configuration, 'r'))
+    executable = test_matrix['executable']
 
-        number_of_tests = len(test_matrix['test-cases'])
-        logger.critical('Found {} tests'.format(number_of_tests))
+    number_of_tests = len(test_matrix['test-cases'])
+    logger.critical('Found {} tests'.format(number_of_tests))
 
-        test_cases = [case for case in test_matrix['test-cases'] if filter_tests(case, inputs.filters, inputs.exclude_filters)]
-        number_of_tests_to_run = len(test_cases)
-        logger.critical('Running {} tests'.format(number_of_tests_to_run))
+    test_cases = [case for case in test_matrix['test-cases'] if filter_tests(case, inputs.filters, inputs.exclude_filters)]
+    number_of_tests_to_run = len(test_cases)
+    logger.critical('Running {} tests'.format(number_of_tests_to_run))
 
-        tests = []
-        for test_case in test_cases:
-            test = test_matrix['test-cases'][test_case]
-            tests.append(TestCase(test_case,
-                                executable if not test.get('executable', '') else test['executable'],
-                                test.get('return-code', None),
-                                test.get('argv', []),
-                                test.get('stdin', ''),
-                                test.get('stdout', ''),
-                                test.get('stderr', ''),
-                                test.get('ofstreams', {}),
-                                test.get('extra-tests', []),
-                                os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case)))
+    tests = []
+    for test_case in test_cases:
+        test = test_matrix['test-cases'][test_case]
+        tests.append(TestCase(test_case,
+                              executable if not test.get('executable', '') else test['executable'],
+                              test.get('return-code', None),
+                              test.get('argv', []),
+                              test.get('stdin', ''),
+                              test.get('stdout', ''),
+                              test.get('stderr', ''),
+                              test.get('ofstreams', {}),
+                              test.get('extra-tests', []),
+                              os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case)))
 
-        errors = 0
-        for test in tests:
-            errors += test.execute()
-            logger_format_fields['test_case'] = __file__
+    errors = 0
+    for test in tests:
+        errors += test.execute()
+        logger_format_fields['test_case'] = __file__
 
-        logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run))
-        return errors
+    logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run))
+    return errors
 
 
 if __name__ == '__main__':

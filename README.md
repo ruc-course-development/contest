@@ -17,7 +17,24 @@ update readme with test generation instructions
 
 # details
 ## overview
-A set of tests for a particular executable are defined in a single test recipe. This recipe is a YAML file that allows the test developer to specify the executable, inputs, and outputs of the program over any number of test cases. The ```test_skeleton.yaml``` is just an empty recipe that shows what can be specified. Entries that are to be left empty can be removed from the recipe altogether to avoid clutter. e.g. your program may not interact with ```stdin``` and so you can just remove it from your tests.
+A set of tests for a particular executable are defined in a single test recipe. This recipe is a YAML file that allows the test developer to specify the executable, inputs, and outputs of the program over any number of test cases. The ```test skeleton``` below is just an empty recipe that shows what can be specified. Entries that are to be left empty can be removed from the recipe altogether to avoid clutter. e.g. your program may not interact with ```stdin``` and so you can just remove it from your test configuration.
+
+## test skeleton
+```python
+executable:
+test-cases:
+    standard:
+        executable:
+        returncode:
+        argv: []
+        stdin: |
+        stdout: |
+        stderr: |
+        ofstreams:
+            - base-file:
+              test-file:
+        extra-tests: []
+```
 
 ### learning by example
 Each test case is defined under the ```test-cases``` node in the recipe; simply add a new section as desired. You will just need to make sure each test is named uniquely. Here is an example of a test recipe (taken from ```exampels/native_console_app```):
