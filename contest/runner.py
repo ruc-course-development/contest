@@ -277,10 +277,8 @@ def test():
     """Run the specified test configuration"""
     parser = argparse.ArgumentParser(__file__)
     parser.add_argument('configuration', help='path to a YAML test configuration file')
-    parser.add_argument('--filters', default=[], nargs='+', help='regex pattern for tests to match')    
-    parser.add_argument('--exclude-filters', default=[], nargs='+', help='regex pattern for tests to match')    
-    parser.add_argument('--generate', nargs='+', help='executable and arguments to generate a test for')    
-    parser.add_argument('--new-test-name', help='name for the test being generated; name must be unused already')    
+    parser.add_argument('--filters', default=[], nargs='+', help='regex pattern for tests to match')
+    parser.add_argument('--exclude-filters', default=[], nargs='+', help='regex pattern for tests to match')
     parser.add_argument('--verbose', action='store_true', default=False, help='verbose output')
     parser.add_argument('--version', action='version', version='contest.py v{}'.format(__version__))
     inputs = parser.parse_args()
