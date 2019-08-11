@@ -7,7 +7,11 @@ A `CON`sole application `TEST`er
 `contest` is a testing application that exercises a program with configured input and then checks the output with some expected content. Simply put, `contest` is a driver that facilitates supplying input to and validating output from a specific executable. `contest` itself is not obscenely robust, but lets the developer implement what is needed as they need it.
 
 ## Installation
-Instructions coming soon. For now you must suffer and clone this repo and run:
+```
+pip install contest
+```
+
+You may install from this repo, clone and simply:
 ```
 python setup.py install
 ```
@@ -46,7 +50,12 @@ I have a few primary development environments at the moment and so you can for e
 - **Python 3.7.3** and MSVC v1916 (Windows 10, Visual C++ 2017 (15.9))
 
 ## Basic Usage
-Each test case is defined under the `test-cases` node in the recipe; simply add a new section as desired. You will just need to make sure each test is named uniquely. Here is an example of a test recipe (taken from `exampels/native_console_app`):
+Given some configuration you can run `contest` using the following:
+```
+contest <path to configuration file>
+```
+
+This will parse the configuration and run the specified test cass(s). In the configuration file each test case is defined under the `test-cases` node in the recipe; simply add a new section as desired. You will just need to make sure each test is named uniquely. Here is an example of a test recipe (taken from `exampels/native_console_app`):
 
 ```
 executable: hello_world.exe
@@ -81,7 +90,7 @@ Let us break down what this is specifying:
 
 This is really the equivalent of the following in some shell environment:
 ```
-~/project> ./main.exe
+~/project> ./hello_world.exe
 Hello! What is your name?
 Lnk2past
 Welcome to the world, Lnk2past!
