@@ -9,6 +9,9 @@ with open(os.path.join(here, 'contest', '__version__.py'), 'r') as f:
 with open('README.md', 'r') as f:
     readme = f.read()
 
+with open('requirements.txt', 'r') as f:
+    install_requires = f.read().split('\n')
+
 setup(
     name=about['__title__'],
     version=about['__version__'],
@@ -19,4 +22,10 @@ setup(
     long_description_content_type='text/markdown',
     license=about['__license__'],
     url=about['__url__']
+    install_requires=install_requires,
+    entry_points = {
+        'console_scripts': [
+            'contest=contest.__main__:main'
+        ]
+    }
 )
