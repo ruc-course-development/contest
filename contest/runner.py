@@ -7,10 +7,9 @@ import sys
 import yaml
 from collections import OrderedDict
 from subprocess import Popen, PIPE
-
+from contest import __version__
 
 sys.dont_write_bytecode = True
-__version__ = '0.1.0'
 logger = logging.getLogger(__name__)
 logger_format_fields = {
     'test_case': __file__
@@ -280,7 +279,7 @@ def test():
     parser.add_argument('--filters', default=[], nargs='+', help='regex pattern for tests to match')
     parser.add_argument('--exclude-filters', default=[], nargs='+', help='regex pattern for tests to match')
     parser.add_argument('--verbose', action='store_true', default=False, help='verbose output')
-    parser.add_argument('--version', action='version', version='contest.py v{}'.format(__version__))
+    parser.add_argument('--version', action='version', version='contest.py v{}'.format(__version__.__version__))
     inputs = parser.parse_args()
 
     setup_logger(inputs.verbose)

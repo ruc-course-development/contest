@@ -4,7 +4,7 @@ from contest import runner
 
 def main():
     """The main routine."""
-    runner.test()
+    sys.exit(runner.test())
 
 
 if __name__ == "__main__":
