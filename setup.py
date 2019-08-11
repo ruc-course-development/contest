@@ -21,7 +21,7 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     license=about['__license__'],
-    url=about['__url__']
+    url=about['__url__'],
     install_requires=install_requires,
     entry_points = {
         'console_scripts': [
