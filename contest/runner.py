@@ -49,7 +49,7 @@ def test():
     inputs = parser.parse_args()
 
     setup_logger(inputs.verbose)
-    logger_format_fields['test_case'] = __file__
+    logger_format_fields['test_case'] = 'contest'
 
     logger.critical('Loading {}'.format(inputs.configuration), extra=logger_format_fields)
     test_matrix = yaml.load(open(inputs.configuration, 'r'))
@@ -79,7 +79,8 @@ def test():
     errors = 0
     for test in tests:
         errors += test.execute()
-        logger_format_fields['test_case'] = __file__
+    
+    logger_format_fields['test_case'] = 'contest'
 
     logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run), extra=logger_format_fields)
     return errors
