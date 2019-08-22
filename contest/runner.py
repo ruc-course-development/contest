@@ -51,7 +51,7 @@ def test():
     setup_logger(inputs.verbose)
 
     logger.critical('Loading {}'.format(inputs.configuration))
-    test_matrix = yaml.load(open(inputs.configuration, 'r'))
+    test_matrix = yaml.load(open(inputs.configuration, 'r'), Loader=yaml.FullLoader))
     executable = test_matrix['executable']
 
     number_of_tests = len(test_matrix['test-cases'])
