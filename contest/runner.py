@@ -25,7 +25,7 @@ def filter_tests(case_name, includes, excludes):
     """
     for re_filter in excludes:
         if re.search(re_filter, case_name):
-            logger.debug('Excluding {}, matches pattern {}'.format(case_name, re_filter))
+            logger.debug('Excluding {}, matches pattern {}'.format(case_name, re_filter), extra=logger_format_fields)
             return False
 
     if not includes:
@@ -33,7 +33,7 @@ def filter_tests(case_name, includes, excludes):
 
     for re_filter in includes:
         if re.search(re_filter, case_name):
-            logger.debug('Including {}, matches pattern {}'.format(case_name, re_filter))
+            logger.debug('Including {}, matches pattern {}'.format(case_name, re_filter), extra=logger_format_fields)
             return True
     return False
 
@@ -49,17 +49,18 @@ def test():
     inputs = parser.parse_args()
 
     setup_logger(inputs.verbose)
+    logger_format_fields['test_case'] = __file__
 
-    logger.critical('Loading {}'.format(inputs.configuration))
-    test_matrix = yaml.load(open(inputs.configuration, 'r'), Loader=yaml.FullLoader)
+    logger.critical('Loading {}'.format(inputs.configuration), extra=logger_format_fields)
+    test_matrix = yaml.load(open(inputs.configuration, 'r'))
     executable = test_matrix['executable']
 
     number_of_tests = len(test_matrix['test-cases'])
-    logger.critical('Found {} tests'.format(number_of_tests))
+    logger.critical('Found {} tests'.format(number_of_tests), extra=logger_format_fields)
 
     test_cases = [case for case in test_matrix['test-cases'] if filter_tests(case, inputs.filters, inputs.exclude_filters)]
     number_of_tests_to_run = len(test_cases)
-    logger.critical('Running {} tests'.format(number_of_tests_to_run))
+    logger.critical('Running {} tests'.format(number_of_tests_to_run), extra=logger_format_fields)
 
     tests = []
     for test_case in test_cases:
@@ -80,7 +81,7 @@ def test():
         errors += test.execute()
         logger_format_fields['test_case'] = __file__
 
-    logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run))
+    logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run), extra=logger_format_fields)
     return errors
 
 

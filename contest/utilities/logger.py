@@ -20,30 +20,11 @@ def setup_logger(is_verbose):
 
     level = verbosity_mapping[is_verbose]
 
-    class Formatter(logging.Formatter):
-        def format(self, record):
-            """Format the message conditionally
-
-            Arguments:
-                record (str): incoming message information
-
-            Returns:
-                updated message information
-            """
-            if record.levelno == logging.DEBUG:
-                s = '%(message)s'
-            else:
-                s = '%(test_case)s - %(message)s'
-            self._style._fmt = s
-            s = logging.Formatter.format(self, record)
-            return s
-
     global logger
-    global logger_format_fields
     logger.setLevel(level)
     ch = logging.StreamHandler()
     ch.setLevel(level)
-    formatter = Formatter()
+    formatter = logging.Formatter('%(test_case)s - %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)  # pylint: disable=E1101
     logger = logging.LoggerAdapter(logger, logger_format_fields)

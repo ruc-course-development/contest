@@ -3,10 +3,8 @@ import re
 from subprocess import Popen, PIPE
 from contest.utilities import chdir
 from contest.utilities.importer import import_from_source
-import contest.utilities.logger
+from contest.utilities.logger import logger, logger_format_fields
 
-logger_format_fields = contest.utilities.logger.logger_format_fields
-logger = contest.utilities.logger.logger
 
 
 class TestCase():
@@ -25,7 +23,8 @@ class TestCase():
             extra_tests (list): list of additional modules to load for testing
             test_home (str): directory to run the test out of
         """
-        logger.debug('Constructing test case {}'.format(case_name))
+        logger_format_fields['test_case'] = case_name
+        logger.debug('Constructing test case {}'.format(case_name), extra=logger_format_fields)
         self.case_name = case_name
         self.exe = exe
         self.return_code = return_code
@@ -63,10 +62,8 @@ class TestCase():
         Returns:
             Number of errors encountered
         """
-        logger_format_fields['test_case'] = 'test={}'.format(self.case_name)
-        logger.critical('Starting test')
-
-        logger.debug('Running: {}'.format(self.test_args))
+        logger.critical('Starting test', extra=logger_format_fields)
+        logger.debug('Running: {}'.format(self.test_args), extra=logger_format_fields)
         with chdir.ChangeDirectory(self.test_home):
             proc = Popen(self.test_args, cwd=os.getcwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
             stdout, stderr = proc.communicate(input=self.stdin)
@@ -76,7 +73,7 @@ class TestCase():
             errors += self.check_streams('stderr', self.stderr, stderr)
 
             if self.return_code and int(self.return_code) != proc.returncode:
-                logger.critical('FAILURE:\n         Expected return code {}, received {}'.format(self.return_code, proc.returncode))
+                logger.critical('FAILURE:\n         Expected return code {}, received {}'.format(self.return_code, proc.returncode), extra=logger_format_fields)
                 errors += 1
 
             for ofstream in self.ofstreams:
@@ -87,14 +84,14 @@ class TestCase():
                         errors += self.check_streams(base_file, tfile.read(), pfile.read())
 
             for extra_test in self.extra_tests:
-                logger.debug('Running extra test: {}'.format(extra_test))
+                logger.debug('Running extra test: {}'.format(extra_test), extra=logger_format_fields)
                 extra_test = import_from_source(extra_test)
                 if not extra_test.test():
                     errors += 1
-                    logger.critical('Failed!')
+                    logger.critical('Failed!', extra=logger_format_fields)
 
             if not errors:
-                logger.critical('OK!')
+                logger.critical('OK!', extra=logger_format_fields)
 
         return int(errors > 0)
 
@@ -110,9 +107,9 @@ class TestCase():
         Returns:
             0 for no errror, 1 for error
         """
-        logger.debug('Comparing {} streams line by line'.format(stream))
+        logger.debug('Comparing {} streams line by line'.format(stream), extra=logger_format_fields)
         for line_number, (e, r) in enumerate(zip(re.split('\n+', expected), re.split('\n+', received))):
-            logger.debug('{} line {}:\n"{}"\n"{}"\n'.format(stream, line_number, e, r))
+            logger.debug('{} line {}:\n"{}"\n"{}"\n'.format(stream, line_number, e, r), extra=logger_format_fields)
             if e != r:
                 i = 0
                 while True:
@@ -130,7 +127,7 @@ class TestCase():
 
                     i = i + 5
                 error_location = (' '*i) + '^ ERROR'
-                logger.critical('FAILURE:\n        Expected "{}"\n        Received "{}"\n                  {}'.format(e, r, error_location))
+                logger.critical('FAILURE:\n        Expected "{}"\n        Received "{}"\n                  {}'.format(e, r, error_location), extra=logger_format_fields)
 
                 return 1
         return 0
