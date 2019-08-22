@@ -9,6 +9,7 @@ from collections import OrderedDict
 from subprocess import Popen, PIPE
 from contest import __version__
 
+
 sys.dont_write_bytecode = True
 logger = logging.getLogger(__name__)
 logger_format_fields = {
@@ -125,19 +126,19 @@ def import_from_source(path, add_to_modules=False):
 
 class TestCase():
     def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, extra_tests, test_home):
-        """
-        Initialize test case inputs
+        """Initialize test case inputs
 
-        :param case_name: name of the test
-        :param exe: executable to test
-        :param return_code: return code of the execution
-        :param argv: list of command line arguments
-        :param stdin: list of inputs that are passed to stdin
-        :param stdout: expected output to stdout
-        :param stderr: expected output to stderr
-        :param ofstreams: list of pairs of file names and content
-        :param extra_tests: list of additional modules to load for testing
-        :param test_home: directory to run the test out of
+        Arguments:
+            case_name (str): name of the test
+            exe (str): executable to test
+            return_code (int): return code of the execution
+            argv (list): list of command line arguments
+            stdin (list): list of inputs that are passed to stdin
+            stdout (str): expected output to stdout
+            stderr (str): expected output to stderr
+            ofstreams (list): list of pairs of file names and content
+            extra_tests (list): list of additional modules to load for testing
+            test_home (str): directory to run the test out of
         """
         logger.debug('Constructing test case {}'.format(case_name))
         self.case_name = case_name
@@ -155,11 +156,11 @@ class TestCase():
         self.test_args = self._setup_test_process()
 
     def _setup_test_process(self):
-        """
-        Properly sets the relative paths for the executable and contructs the 
+        """Properly sets the relative paths for the executable and contructs the 
         argument list for the executable.
 
-        :return: list of the executable and arguments to be passed to Popen
+        Returns:
+            list of the executable and arguments to be passed to Popen
         """
         test_args = []
         splexe = self.exe.split()
@@ -172,10 +173,10 @@ class TestCase():
         return test_args
 
     def execute(self):
-        """
-        Execute the test
+        """Execute the test
 
-        :return: number of errors encountered
+        Returns:
+            Number of errors encountered
         """
         logger_format_fields['test_case'] = 'test={}'.format(self.case_name)
         logger.critical('Starting test')
@@ -214,13 +215,15 @@ class TestCase():
 
     @staticmethod
     def check_streams(stream, expected, received):
-        """
-        Compares two output streams, line by line
+        """Compares two output streams, line by line
 
-        :param stream: name of stream being tested
-        :param expected: expected content of stream
-        :param received: stream output from the test
-        :return: 0 for no errror, 1 for error
+        Arguments:
+            stream (str): name of stream being tested
+            expected (str): expected content of stream
+            received (str): stream output from the test
+
+        Returns:
+            0 for no errror, 1 for error
         """
         logger.debug('Comparing {} streams line by line'.format(stream))
         for line_number, (e, r) in enumerate(zip(re.split('\n+', expected), re.split('\n+', received))):
@@ -249,13 +252,15 @@ class TestCase():
 
 
 def filter_tests(case_name, includes, excludes):
-    """
-    Check if the input case is valid
+    """Check if the input case is valid
 
-    :param case_name: name of case
-    :param includes: list of regex patterns to check against
-    :param excludes: list of regex patterns to check against
-    :return: True is valid, False otherwise
+    Arguments:
+        case_name (str): name of case
+        includes (list): list of regex patterns to check against
+        excludes (list): list of regex patterns to check against
+
+    Returns:
+        True is valid, False otherwise
     """
     for re_filter in excludes:
         if re.search(re_filter, case_name):
