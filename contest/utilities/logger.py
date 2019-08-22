@@ -8,11 +8,10 @@ logger_format_fields = {
 
 
 def setup_logger(is_verbose):
-    """
-    Configure the logger for contest.py
+    """Configure the logger for contest.py
 
-    :param level: logging level
-    :return:
+    Arguments:
+        level (bool): logging level
     """
     verbosity_mapping = {
         False: logging.CRITICAL,
@@ -23,11 +22,13 @@ def setup_logger(is_verbose):
 
     class Formatter(logging.Formatter):
         def format(self, record):
-            """
-            Format the message conditionally
+            """Format the message conditionally
 
-            :param record: incoming message information
-            :return: updated message information
+            Arguments:
+                record (str): incoming message information
+
+            Returns:
+                updated message information
             """
             if record.levelno == logging.DEBUG:
                 s = '%(message)s'
@@ -38,6 +39,7 @@ def setup_logger(is_verbose):
             return s
 
     global logger
+    global logger_format_fields
     logger.setLevel(level)
     ch = logging.StreamHandler()
     ch.setLevel(level)

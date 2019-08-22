@@ -2,6 +2,7 @@ import argparse
 import os
 import re
 import sys
+import yaml
 from contest import __version__
 from contest.TestCase import TestCase
 from contest.utilities import chdir, configure_yaml
