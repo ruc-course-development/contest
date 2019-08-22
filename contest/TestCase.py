@@ -1,6 +1,7 @@
 import os
 import re
 from subprocess import Popen, PIPE
+from contest.utilities import chdir
 from contest.utilities.importer import import_from_source
 import contest.utilities.logger
 

@@ -5,8 +5,8 @@ import sys
 import yaml
 from contest import __version__
 from contest.TestCase import TestCase
-from contest.utilities import chdir, configure_yaml
-from contest.utilities.logger import logger, setup_logger
+from contest.utilities import configure_yaml
+from contest.utilities.logger import logger, logger_format_fields, setup_logger
 
 
 sys.dont_write_bytecode = True
