@@ -11,7 +11,6 @@ from contest.utilities.logger import logger, setup_logger
 sys.dont_write_bytecode = True
 
 
-
 def filter_tests(case_name, includes, excludes):
     """Check if the input case is valid
 

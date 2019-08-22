@@ -2,7 +2,7 @@ import os
 import re
 from subprocess import Popen, PIPE
 from contest.utilities.importer import import_from_source
-from contest.utilities.logger import logger
+from contest.utilities.logger import logger, logger_format_fields
 
 class TestCase():
     def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, extra_tests, test_home):
