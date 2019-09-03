@@ -1,6 +1,6 @@
 import os
 import re
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, TimeoutExpired
 from contest.utilities import chdir
 from contest.utilities.importer import import_from_source
 from contest.utilities.logger import logger, logger_format_fields
@@ -8,7 +8,7 @@ from contest.utilities.logger import logger, logger_format_fields
 
 
 class TestCase():
-    def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, extra_tests, test_home):
+    def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, extra_tests, timeout, test_home):
         """Initialize test case inputs
 
         Arguments:
@@ -34,6 +34,7 @@ class TestCase():
         self.stderr = stderr
         self.ofstreams = ofstreams
         self.extra_tests = extra_tests
+        self.timeout = timeout
         self.test_home = test_home
         os.makedirs(self.test_home, exist_ok=True)
 
@@ -65,10 +66,16 @@ class TestCase():
         logger.critical('Starting test', extra=logger_format_fields)
         logger.debug('Running: {}'.format(self.test_args), extra=logger_format_fields)
         with chdir.ChangeDirectory(self.test_home):
-            proc = Popen(self.test_args, cwd=os.getcwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-            stdout, stderr = proc.communicate(input=self.stdin)
-        
             errors = 0
+            try:
+                proc = Popen(self.test_args, cwd=os.getcwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+                stdout, stderr = proc.communicate(input=self.stdin, timeout=self.timeout)
+            except TimeoutExpired as e:
+                logger.critical('Your program took too long to run! Perhaps you have an infinite loop?', extra=logger_format_fields)
+                proc.kill()
+                stdout, stderr = proc.communicate()
+                errors += 1
+        
             errors += self.check_streams('stdout', self.stdout, stdout)
             errors += self.check_streams('stderr', self.stderr, stderr)
 

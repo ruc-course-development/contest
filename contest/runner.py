@@ -52,7 +52,7 @@ def test():
     logger_format_fields['test_case'] = 'contest'
 
     logger.critical('Loading {}'.format(inputs.configuration), extra=logger_format_fields)
-    test_matrix = yaml.load(open(inputs.configuration, 'r'))
+    test_matrix = yaml.load(open(inputs.configuration, 'r'), Loader=yaml.FullLoader)
     executable = test_matrix['executable']
 
     number_of_tests = len(test_matrix['test-cases'])
@@ -74,6 +74,7 @@ def test():
                               test.get('stderr', ''),
                               test.get('ofstreams', {}),
                               test.get('extra-tests', []),
+                              test.get('timeout', None),
                               os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case)))
 
     errors = 0
