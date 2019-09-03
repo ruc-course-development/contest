@@ -10,7 +10,7 @@ from contest.utilities.logger import logger, logger_format_fields, setup_logger
 # PyYAML 3.12 compatibility
 try:
     from yaml import FullLoader as DefaultLoader
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     from yaml import Loader as DefaultLoader
 
 sys.dont_write_bytecode = True
