@@ -7,7 +7,11 @@ from contest import __version__
 from contest.TestCase import TestCase
 from contest.utilities import configure_yaml
 from contest.utilities.logger import logger, logger_format_fields, setup_logger
-
+# PyYAML 3.12 compatibility
+try:
+    from yaml import FullLoader as DefaultLoader
+except (ImportError, ModuleNotFoundError):
+    from yaml import Loader as DefaultLoader
 
 sys.dont_write_bytecode = True
 
@@ -52,7 +56,7 @@ def test():
     logger_format_fields['test_case'] = 'contest'
 
     logger.critical('Loading {}'.format(inputs.configuration), extra=logger_format_fields)
-    test_matrix = yaml.load(open(inputs.configuration, 'r'), Loader=yaml.FullLoader)
+    test_matrix = yaml.load(open(inputs.configuration, 'r'), Loader=DefaultLoader)
     executable = test_matrix['executable']
 
     number_of_tests = len(test_matrix['test-cases'])
@@ -80,7 +84,7 @@ def test():
     errors = 0
     for test in tests:
         errors += test.execute()
-    
+
     logger_format_fields['test_case'] = 'contest'
 
     logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run), extra=logger_format_fields)
