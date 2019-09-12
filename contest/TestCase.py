@@ -63,6 +63,7 @@ class TestCase():
         Returns:
             Number of errors encountered
         """
+        logger_format_fields['test_case'] = self.case_name
         logger.critical('Starting test', extra=logger_format_fields)
         logger.debug('Running: {}'.format(self.test_args), extra=logger_format_fields)
         with chdir.ChangeDirectory(self.test_home):
