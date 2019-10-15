@@ -1,5 +1,5 @@
 # contest
-[![Build Status](https://github.com/Lnk2past/contest/workflows/Build%20Examples/badge.svg)](https://github.com/Lnk2past/contest/actions) [![Build Status](https://travis-ci.org/Lnk2past/contest.svg?branch=master)](https://travis-ci.org/Lnk2past/contest)
+[![Build Status](https://github.com/Lnk2past/contest/workflows/Build%20Examples/badge.svg)](https://github.com/Lnk2past/contest/actions) [![Travis (.com)](https://img.shields.io/travis/com/Lnk2past/contest?label=Build%20Examples&logo=travis)](https://travis-ci.org/Lnk2past/contest)
 
 A `CON`sole application `TEST`er
 
