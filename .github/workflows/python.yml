@@ -1,0 +1,32 @@
+name: Build Examples
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 2
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+        python-version: [3.6, 3.7]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Contest
+      run: |
+        python setup.py install
+    - name: Build Tests
+      run: |
+        cd examples
+        cmake .
+        cmake --build . --target install
+    - name: Tests
+      run: |
+        contest examples/many_cases/contest_recipe.yaml
+        contest examples/native_console_app/contest_recipe.yaml
+        contest examples/output_file/contest_recipe.yaml
+        contest examples/python_console_app/contest_recipe.yaml
