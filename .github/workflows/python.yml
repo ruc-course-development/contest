@@ -1,5 +1,3 @@
-name: Build Examples
-
 on: [push]
 
 jobs:
@@ -35,6 +33,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
     steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
     - name: Build Distribution
       run: |
         pip install wheel
@@ -44,6 +47,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
     steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@v1.0.0a0
       with:
