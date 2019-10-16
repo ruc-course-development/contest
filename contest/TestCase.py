@@ -49,15 +49,10 @@ class TestCase():
             list of the executable and arguments to be passed to Popen
         """
         splexe = self.exe.split()
-
-        if pathlib.Path(os.path.join(self.test_home, '..', '..', splexe[0])).exists():
-            splexe[0] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[0]))
-        elif which.on_path(splexe[0]) and len(splexe) > 1:
-            if pathlib.Path(os.path.join(self.test_home, '..', '..', splexe[1])).exists():
-                splexe[1] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[1]))
-
         splexe.extend(self.argv)
-
+        for idx, sp in enumerate(splexe):
+            if pathlib.Path(os.path.join(self.test_home, '..', '..', sp)).exists():
+                splexe[idx] = os.path.abspath(os.path.join(self.test_home, '..', '..', sp))
         return splexe
 
     def execute(self):
