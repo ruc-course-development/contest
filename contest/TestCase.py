@@ -1,7 +1,7 @@
-import os
+import pathlib
 import re
 from subprocess import Popen, PIPE, TimeoutExpired
-from contest.utilities import chdir
+from contest.utilities import chdir, which
 from contest.utilities.importer import import_from_source
 from contest.utilities.logger import logger, logger_format_fields
 
@@ -36,7 +36,7 @@ class TestCase():
         self.extra_tests = extra_tests
         self.timeout = timeout
         self.test_home = test_home
-        os.makedirs(self.test_home, exist_ok=True)
+        pathlib.Path(self.test_home).mkdir(parents=True, exist_ok=True)
 
         self.test_args = self._setup_test_process()
 
@@ -47,15 +47,14 @@ class TestCase():
         Returns:
             list of the executable and arguments to be passed to Popen
         """
-        test_args = []
         splexe = self.exe.split()
-        if len(splexe) == 1:
-            test_args.append(os.path.abspath(os.path.join(self.test_home, '..', '..', self.exe)))
-        elif len(splexe) == 2:
-            splexe[1] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[1]))
-            test_args.extend(splexe)
-        test_args.extend(self.argv)
-        return test_args
+        splexe.extend(self.argv)
+        for idx, sp in enumerate(splexe):
+            sp = pathlib.Path(self.test_home, '..', '..', sp)
+            if sp.exists():
+                sp = sp.resolve()
+                splexe[idx] = str(sp)
+        return splexe
 
     def execute(self):
         """Execute the test
@@ -65,11 +64,12 @@ class TestCase():
         """
         logger_format_fields['test_case'] = self.case_name
         logger.critical('Starting test', extra=logger_format_fields)
+        logger.debug('Test Home: {}'.format(self.test_home), extra=logger_format_fields)
         logger.debug('Running: {}'.format(self.test_args), extra=logger_format_fields)
         with chdir.ChangeDirectory(self.test_home):
             errors = 0
             try:
-                proc = Popen(self.test_args, cwd=os.getcwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+                proc = Popen(self.test_args, cwd=pathlib.Path.cwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
                 stdout, stderr = proc.communicate(input=self.stdin, timeout=self.timeout)
             except TimeoutExpired as e:
                 logger.critical('Your program took too long to run! Perhaps you have an infinite loop?', extra=logger_format_fields)
@@ -86,7 +86,7 @@ class TestCase():
 
             for ofstream in self.ofstreams:
                 test_file = ofstream['test-file']
-                base_file = os.path.join('..', '..', ofstream['base-file'])
+                base_file = pathlib.Path('..', '..', ofstream['base-file'])
                 if test_file and base_file:
                     with open(test_file, 'r') as tfile, open(base_file, 'r') as pfile:
                         errors += self.check_streams(base_file, tfile.read(), pfile.read())
