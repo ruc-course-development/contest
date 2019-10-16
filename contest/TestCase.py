@@ -1,4 +1,3 @@
-import os
 import pathlib
 import re
 from subprocess import Popen, PIPE, TimeoutExpired
@@ -37,7 +36,7 @@ class TestCase():
         self.extra_tests = extra_tests
         self.timeout = timeout
         self.test_home = test_home
-        os.makedirs(self.test_home, exist_ok=True)
+        pathlib.Path(self.test_home).mkdir(parents=True, exist_ok=True)
 
         self.test_args = self._setup_test_process()
 
@@ -51,8 +50,10 @@ class TestCase():
         splexe = self.exe.split()
         splexe.extend(self.argv)
         for idx, sp in enumerate(splexe):
-            if pathlib.Path(os.path.join(self.test_home, '..', '..', sp)).exists():
-                splexe[idx] = os.path.abspath(os.path.join(self.test_home, '..', '..', sp))
+            sp = pathlib.Path(self.test_home, '..', '..', sp)
+            if sp.exists():
+                sp = sp.resolve()
+                splexe[idx] = str(sp)
         return splexe
 
     def execute(self):
@@ -68,7 +69,7 @@ class TestCase():
         with chdir.ChangeDirectory(self.test_home):
             errors = 0
             try:
-                proc = Popen(self.test_args, cwd=os.getcwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+                proc = Popen(self.test_args, cwd=pathlib.Path.cwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
                 stdout, stderr = proc.communicate(input=self.stdin, timeout=self.timeout)
             except TimeoutExpired as e:
                 logger.critical('Your program took too long to run! Perhaps you have an infinite loop?', extra=logger_format_fields)
@@ -85,7 +86,7 @@ class TestCase():
 
             for ofstream in self.ofstreams:
                 test_file = ofstream['test-file']
-                base_file = os.path.join('..', '..', ofstream['base-file'])
+                base_file = pathlib.Path('..', '..', ofstream['base-file'])
                 if test_file and base_file:
                     with open(test_file, 'r') as tfile, open(base_file, 'r') as pfile:
                         errors += self.check_streams(base_file, tfile.read(), pfile.read())
