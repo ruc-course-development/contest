@@ -56,6 +56,8 @@ class TestCase():
             if pathlib.Path(os.path.join(self.test_home, '..', '..', splexe[1])).exists():
                 splexe[1] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[1]))
 
+        splexe.extend(self.argv)
+
         return splexe
 
     def execute(self):
