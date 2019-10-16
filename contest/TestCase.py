@@ -1,4 +1,5 @@
 import os
+import pathlib
 import re
 from subprocess import Popen, PIPE, TimeoutExpired
 from contest.utilities import chdir, which
@@ -48,13 +49,12 @@ class TestCase():
             list of the executable and arguments to be passed to Popen
         """
         splexe = self.exe.split()
-        
-        if which.on_path(splexe[0]):
-            pass
-        elif pathlib.Path(splexe[0]).exists():
+
+        if pathlib.Path(os.path.join(self.test_home, '..', '..', splexe[0])).exists():
             splexe[0] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[0]))
-        elif which.on_path(splexe[0]) and len(splexe) > 1 and pathlib.Path().exists(splexe[1]):
-            splexe[1] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[1]))
+        elif which.on_path(splexe[0]) and len(splexe) > 1:
+            if pathlib.Path(os.path.join(self.test_home, '..', '..', splexe[1])).exists():
+                splexe[1] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[1]))
 
         return splexe
 
@@ -66,6 +66,7 @@ class TestCase():
         """
         logger_format_fields['test_case'] = self.case_name
         logger.critical('Starting test', extra=logger_format_fields)
+        logger.debug('Test Home: {}'.format(self.test_home), extra=logger_format_fields)
         logger.debug('Running: {}'.format(self.test_args), extra=logger_format_fields)
         with chdir.ChangeDirectory(self.test_home):
             errors = 0
