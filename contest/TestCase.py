@@ -1,7 +1,7 @@
 import os
 import re
 from subprocess import Popen, PIPE, TimeoutExpired
-from contest.utilities import chdir
+from contest.utilities import chdir, which
 from contest.utilities.importer import import_from_source
 from contest.utilities.logger import logger, logger_format_fields
 
@@ -47,15 +47,16 @@ class TestCase():
         Returns:
             list of the executable and arguments to be passed to Popen
         """
-        test_args = []
         splexe = self.exe.split()
-        if len(splexe) == 1:
-            test_args.append(os.path.abspath(os.path.join(self.test_home, '..', '..', self.exe)))
-        elif len(splexe) == 2:
+        
+        if which.on_path(splexe[0]):
+            pass
+        elif pathlib.Path(splexe[0]).exists():
+            splexe[0] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[0]))
+        elif which.on_path(splexe[0]) and len(splexe) > 1 and pathlib.Path().exists(splexe[1]):
             splexe[1] = os.path.abspath(os.path.join(self.test_home, '..', '..', splexe[1]))
-            test_args.extend(splexe)
-        test_args.extend(self.argv)
-        return test_args
+
+        return splexe
 
     def execute(self):
         """Execute the test
