@@ -77,6 +77,7 @@ def test():
                               test.get('stdout', ''),
                               test.get('stderr', ''),
                               test.get('ofstreams', {}),
+                              {**os.environ, **test.get('env', {})},
                               test.get('extra-tests', []),
                               test.get('timeout', None),
                               os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case)))

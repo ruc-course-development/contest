@@ -7,7 +7,7 @@ from contest.utilities.logger import logger, logger_format_fields
 
 
 class TestCase():
-    def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, extra_tests, timeout, test_home):
+    def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, env, extra_tests, timeout, test_home):
         """Initialize test case inputs
 
         Arguments:
@@ -19,6 +19,7 @@ class TestCase():
             stdout (str): expected output to stdout
             stderr (str): expected output to stderr
             ofstreams (list): list of pairs of file names and content
+            env (dict): dictionary of environment variables to set in the execution space
             extra_tests (list): list of additional modules to load for testing
             test_home (str): directory to run the test out of
         """
@@ -32,6 +33,7 @@ class TestCase():
         self.stdout = stdout
         self.stderr = stderr
         self.ofstreams = ofstreams
+        self.env = env
         self.extra_tests = extra_tests
         self.timeout = timeout
         self.test_home = test_home
@@ -68,7 +70,7 @@ class TestCase():
         with chdir.ChangeDirectory(self.test_home):
             errors = 0
             try:
-                proc = Popen(self.test_args, cwd=pathlib.Path.cwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+                proc = Popen(self.test_args, cwd=pathlib.Path.cwd(), env=self.env, stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
                 stdout, stderr = proc.communicate(input=self.stdin, timeout=self.timeout)
             except TimeoutExpired:
                 logger.critical('Your program took too long to run! Perhaps you have an infinite loop?', extra=logger_format_fields)
