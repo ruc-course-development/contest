@@ -1,5 +1,7 @@
 # contest
-[![Build Status](https://github.com/Lnk2past/contest/workflows/Build/badge.svg)](https://github.com/Lnk2past/contest/actions) [![Travis (.com)](https://img.shields.io/travis/com/Lnk2past/contest?label=Build&logo=travis)](https://travis-ci.org/Lnk2past/contest)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/contest.svg)](https://pypi.python.org/pypi/contest/)
+[![Build Status](https://github.com/Lnk2past/contest/workflows/Build/badge.svg)](https://github.com/Lnk2past/contest/actions)
+[![Travis (.com)](https://img.shields.io/travis/com/Lnk2past/contest?label=Build&logo=travis)](https://travis-ci.org/Lnk2past/contest)
 
 A `CON`sole application `TEST`er
 
@@ -41,13 +43,8 @@ test-cases:
 ```
 
 ## Development Environment
-I am coding this to work with latest Python. I have ~~absolutely no~~ little interest in backwards compatibility. While earlier versions and standards may work right now, I do not guarantee any of that moving forward. I will not hinder development for the sake of supporting something older. Given the range of development environments currently at my disposal there will be some compatibility for a bit.
+I am coding this to work with latest Python. I have ~~absolutely no~~ little interest in backwards compatibility. While earlier versions and standards may work right now, I do not guarantee any of that moving forward. I will not hinder development for the sake of supporting something older (exceptions are for requirements on the servers for my classes, e.g. PyYAML v3.12).
 
-I have a few primary development environments at the moment and so you can for expect support for at least the following:
-- **Python 3.5.3** and GCC 6.3.0 (Raspbian)
-- **Python 3.6.7** and GCC 7.3.0 (Ubuntu 18.04.2)
-- **Python 3.6.8** and MSVC v1916 (Windows 10, Visual C++ 2017 (15.9))
-- **Python 3.7.3** and MSVC v1916 (Windows 10, Visual C++ 2017 (15.9))
 
 ## Basic Usage
 Given some configuration you can run `contest` using the following:
