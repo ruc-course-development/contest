@@ -3,7 +3,18 @@ name: Build
 on: [push]
 
 jobs:
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - run: |
+        python -m pip install flake8
+        flake8
   build-tests:
+    needs: style
     runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 2
@@ -12,8 +23,7 @@ jobs:
         python-version: [3.6, 3.7]
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+    - uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Contest
@@ -30,7 +40,7 @@ jobs:
         contest examples/native_console_app/contest_recipe.yaml
         contest examples/output_file/contest_recipe.yaml
         contest examples/python_console_app/contest_recipe.yaml
-  build-dist:
+  publish:
     needs: build-tests
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
@@ -44,16 +54,6 @@ jobs:
       run: |
         pip install wheel
         python setup.py sdist bdist_wheel
-  publish:
-    needs: build-dist
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
-    steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@v1.0.0a0
       with:
