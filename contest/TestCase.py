@@ -1,10 +1,9 @@
 import pathlib
 import re
 from subprocess import Popen, PIPE, TimeoutExpired
-from contest.utilities import chdir, which
+from contest.utilities import chdir
 from contest.utilities.importer import import_from_source
 from contest.utilities.logger import logger, logger_format_fields
-
 
 
 class TestCase():
@@ -41,7 +40,7 @@ class TestCase():
         self.test_args = self._setup_test_process()
 
     def _setup_test_process(self):
-        """Properly sets the relative paths for the executable and contructs the 
+        """Properly sets the relative paths for the executable and contructs the
         argument list for the executable.
 
         Returns:
@@ -71,12 +70,12 @@ class TestCase():
             try:
                 proc = Popen(self.test_args, cwd=pathlib.Path.cwd(), stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
                 stdout, stderr = proc.communicate(input=self.stdin, timeout=self.timeout)
-            except TimeoutExpired as e:
+            except TimeoutExpired:
                 logger.critical('Your program took too long to run! Perhaps you have an infinite loop?', extra=logger_format_fields)
                 proc.kill()
                 stdout, stderr = proc.communicate()
                 errors += 1
-        
+
             errors += self.check_streams('stdout', self.stdout, stdout)
             errors += self.check_streams('stderr', self.stderr, stderr)
 
@@ -134,8 +133,9 @@ class TestCase():
                         break
 
                     i = i + 5
-                error_location = (' '*i) + '^ ERROR'
-                logger.critical('FAILURE:\n        Expected "{}"\n        Received "{}"\n                  {}'.format(e, r, error_location), extra=logger_format_fields)
-
+                e = '        Expected "{}"'.format(e)
+                r = '        Received "{}"'.format(r)
+                error_location = (' '*18) + (' '*i) + '^ ERROR'
+                logger.critical('FAILURE:\n{}\n{}\n{}'.format(e, r, error_location), extra=logger_format_fields)
                 return 1
         return 0

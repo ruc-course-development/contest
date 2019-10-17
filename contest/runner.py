@@ -5,7 +5,7 @@ import sys
 import yaml
 from contest import __version__
 from contest.TestCase import TestCase
-from contest.utilities import configure_yaml
+from contest.utilities import configure_yaml  # noqa: F401
 from contest.utilities.logger import logger, logger_format_fields, setup_logger
 # PyYAML 3.12 compatibility
 try:

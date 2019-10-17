@@ -23,7 +23,7 @@ setup(
     license=about['__license__'],
     url=about['__url__'],
     install_requires=install_requires,
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'contest=contest.__main__:main'
         ]
