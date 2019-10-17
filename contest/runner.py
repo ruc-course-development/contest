@@ -57,7 +57,7 @@ def test():
 
     logger.critical('Loading {}'.format(inputs.configuration), extra=logger_format_fields)
     test_matrix = yaml.load(open(inputs.configuration, 'r'), Loader=DefaultLoader)
-    executable = test_matrix['executable']
+    executable = test_matrix.get('executable', '')
 
     number_of_tests = len(test_matrix['test-cases'])
     logger.critical('Found {} tests'.format(number_of_tests), extra=logger_format_fields)
@@ -77,6 +77,7 @@ def test():
                               test.get('stdout', ''),
                               test.get('stderr', ''),
                               test.get('ofstreams', {}),
+                              test.get('env', {}) if test.get('scrub-env', False) else {**os.environ, **test.get('env', {})},
                               test.get('extra-tests', []),
                               test.get('timeout', None),
                               os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case)))
