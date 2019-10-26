@@ -46,6 +46,7 @@ def test():
     """Run the specified test configuration"""
     parser = argparse.ArgumentParser(__file__)
     parser.add_argument('configuration', help='path to a YAML test configuration file')
+    parser.add_argument('--fail', action='store_true', default=False, help='end execution on first failure')
     parser.add_argument('--filters', default=[], nargs='+', help='regex pattern for tests to match')
     parser.add_argument('--exclude-filters', default=[], nargs='+', help='regex pattern for tests to match')
     parser.add_argument('--verbose', action='store_true', default=False, help='verbose output')
@@ -83,12 +84,18 @@ def test():
                               os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case)))
 
     errors = 0
+    tests_run = 0
     for test in tests:
         errors += test.execute()
+        tests_run += 1
+        if inputs.fail and errors:
+            logger_format_fields['test_case'] = 'contest'
+            logger.critical('Breaking on first failue', extra=logger_format_fields)
+            break
 
     logger_format_fields['test_case'] = 'contest'
 
-    logger.critical('{}/{} tests passed!'.format(number_of_tests_to_run-errors, number_of_tests_to_run), extra=logger_format_fields)
+    logger.critical('{}/{} tests passed!'.format(tests_run-errors, tests_run), extra=logger_format_fields)
     return errors
 
 
