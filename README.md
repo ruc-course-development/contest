@@ -121,7 +121,7 @@ Even if your test-case produces no output on disk, the test-output directory wil
 You can filter your test-recipes to only run a select few. This may be useful during debugging to only run your new test without needing to run the entire test recipe. You can do this via the `--filter` option. This expects some `regular expression` to filter on. e.g. we can test only those tests that are marked with a specific keyword in their names, say "tracking", by doing the following:
 
 ```
-python contest.py test_recipe.yaml --filter "tracking"
+contest test_recipe.yaml --filter "tracking"
 ```
 
 Likewise, you can exclude specific tests in order if they are problematic or if you are focusing on other tests. simply use the `--exclude-filters` or `--exclude` for short. So long as you know `regex` you can do whatever you like for filtering your tests!
