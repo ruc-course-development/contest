@@ -1,6 +1,6 @@
 import pathlib
 import re
-from subprocess import Popen, PIPE, TimeoutExpired
+from subprocess import run, TimeoutExpired
 from contest.utilities import chdir
 from contest.utilities.importer import import_from_source
 from contest.utilities.logger import logger, logger_format_fields
@@ -24,7 +24,7 @@ class TestCase():
             test_home (str): directory to run the test out of
         """
         logger_format_fields['test_case'] = case_name
-        logger.debug('Constructing test case {}'.format(case_name), extra=logger_format_fields)
+        logger.debug(f'Constructing test case {case_name}', extra=logger_format_fields)
         self.case_name = case_name
         self.exe = exe
         self.return_code = return_code
@@ -46,7 +46,7 @@ class TestCase():
         argument list for the executable.
 
         Returns:
-            list of the executable and arguments to be passed to Popen
+            list of the executable and arguments to be passed to subprocess.run
         """
         splexe = self.exe.split()
         splexe.extend(self.argv)
@@ -65,24 +65,21 @@ class TestCase():
         """
         logger_format_fields['test_case'] = self.case_name
         logger.critical('Starting test', extra=logger_format_fields)
-        logger.debug('Test Home: {}'.format(self.test_home), extra=logger_format_fields)
-        logger.debug('Running: {}'.format(self.test_args), extra=logger_format_fields)
+        logger.debug(f'Test Home: {self.test_home}', extra=logger_format_fields)
+        logger.debug(f'Running: {self.test_args}', extra=logger_format_fields)
         with chdir.ChangeDirectory(self.test_home):
             errors = 0
             try:
-                proc = Popen(self.test_args, cwd=pathlib.Path.cwd(), env=self.env, stdin=PIPE, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-                stdout, stderr = proc.communicate(input=self.stdin, timeout=self.timeout)
+                proc = run(self.test_args, input=self.stdin, capture_output=True, cwd=pathlib.Path.cwd(), timeout=self.timeout, text=True, env=self.env)
             except TimeoutExpired:
                 logger.critical('Your program took too long to run! Perhaps you have an infinite loop?', extra=logger_format_fields)
-                proc.kill()
-                stdout, stderr = proc.communicate()
                 errors += 1
 
-            errors += self.check_streams('stdout', self.stdout, stdout)
-            errors += self.check_streams('stderr', self.stderr, stderr)
+            errors += self.check_streams('stdout', self.stdout, proc.stdout)
+            errors += self.check_streams('stderr', self.stderr, proc.stderr)
 
             if self.return_code and int(self.return_code) != proc.returncode:
-                logger.critical('FAILURE:\n         Expected return code {}, received {}'.format(self.return_code, proc.returncode), extra=logger_format_fields)
+                logger.critical(f'FAILURE:\n         Expected return code {self.return_code}, received {proc.returncode}', extra=logger_format_fields)
                 errors += 1
 
             for ofstream in self.ofstreams:
@@ -93,7 +90,7 @@ class TestCase():
                         errors += self.check_streams(base_file, tfile.read(), pfile.read())
 
             for extra_test in self.extra_tests:
-                logger.debug('Running extra test: {}'.format(extra_test), extra=logger_format_fields)
+                logger.debug(f'Running extra test: {extra_test}', extra=logger_format_fields)
                 extra_test = import_from_source(extra_test)
                 if not extra_test.test():
                     errors += 1
@@ -116,9 +113,9 @@ class TestCase():
         Returns:
             0 for no errror, 1 for error
         """
-        logger.debug('Comparing {} streams line by line'.format(stream), extra=logger_format_fields)
+        logger.debug(f'Comparing {stream} streams line by line', extra=logger_format_fields)
         for line_number, (e, r) in enumerate(zip(re.split('\n+', expected), re.split('\n+', received))):
-            logger.debug('{} line {}:\n"{}"\n"{}"\n'.format(stream, line_number, e, r), extra=logger_format_fields)
+            logger.debug(f'{stream} line {line_number}:\n"{e}"\n"{r}"\n', extra=logger_format_fields)
             if e != r:
                 i = 0
                 while True:
@@ -135,9 +132,9 @@ class TestCase():
                         break
 
                     i = i + 5
-                e = '        Expected "{}"'.format(e)
-                r = '        Received "{}"'.format(r)
+                e = f'        Expected "{e}"'
+                r = f'        Received "{r}"'
                 error_location = (' '*18) + (' '*i) + '^ ERROR'
-                logger.critical('FAILURE:\n{}\n{}\n{}'.format(e, r, error_location), extra=logger_format_fields)
+                logger.critical(f'FAILURE:\n{e}\n{r}\n{error_location}', extra=logger_format_fields)
                 return 1
         return 0
