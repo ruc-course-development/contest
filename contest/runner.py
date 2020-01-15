@@ -63,25 +63,24 @@ def test():
     number_of_tests = len(test_matrix['test-cases'])
     logger.critical('Found {} tests'.format(number_of_tests), extra=logger_format_fields)
 
-    test_cases = [case for case in test_matrix['test-cases'] if filter_tests(case, inputs.filters, inputs.exclude_filters)]
+    test_cases = [case for case in test_matrix['test-cases'] if filter_tests(case['name'], inputs.filters, inputs.exclude_filters)]
     number_of_tests_to_run = len(test_cases)
     logger.critical('Running {} tests'.format(number_of_tests_to_run), extra=logger_format_fields)
 
     tests = []
     for test_case in test_cases:
-        test = test_matrix['test-cases'][test_case]
-        tests.append(TestCase(test_case,
-                              test.get('executable', executable),
-                              test.get('return-code', None),
-                              test.get('argv', []),
-                              test.get('stdin', ''),
-                              test.get('stdout', ''),
-                              test.get('stderr', ''),
-                              test.get('ofstreams', {}),
-                              test.get('env', {}) if test.get('scrub-env', False) else {**os.environ, **test.get('env', {})},
-                              test.get('extra-tests', []),
-                              test.get('timeout', None),
-                              os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case)))
+        tests.append(TestCase(test_case['name'],
+                              test_case.get('executable', executable),
+                              test_case.get('return-code', None),
+                              test_case.get('argv', []),
+                              test_case.get('stdin', ''),
+                              test_case.get('stdout', ''),
+                              test_case.get('stderr', ''),
+                              test_case.get('ofstreams', {}),
+                              test_case.get('env', {}) if test_case.get('scrub-env', False) else {**os.environ, **test_case.get('env', {})},
+                              test_case.get('extra-tests', []),
+                              test_case.get('timeout', None),
+                              os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case['name'])))
 
     errors = 0
     tests_run = 0

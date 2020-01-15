@@ -1,32 +1,32 @@
 executable: printnum.exe
 test-cases:
-    one:
-        stdin: |
-            1
-        stdout: |
-            1
-    two:
-        stdin: |
-            2
-        stdout: |
-            2
-    three:
-        stdin: |
-            3
-        stdout: |
-            3
-    four:
-        stdin: |
-            4
-        stdout: |
-            4
-    pi:
-        stdin: |
-            314
-        stdout: |
-            314
-    demon:
-        stdin: |
-            666
-        stdout: |
-            666
+    - name: one
+      stdin: |
+          1
+      stdout: |
+          1
+    - name: two
+      stdin: |
+          2
+      stdout: |
+          2
+    - name: three
+      stdin: |
+          3
+      stdout: |
+          3
+    - name: four
+      stdin: |
+          4
+      stdout: |
+          4
+    - name: pi
+      stdin: |
+          314
+      stdout: |
+          314
+    - name: demon
+      stdin: |
+          666
+      stdout: |
+          666

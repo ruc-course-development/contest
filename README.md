@@ -1,7 +1,6 @@
 # contest
 [![PyPI version shields.io](https://img.shields.io/pypi/v/contest.svg)](https://pypi.python.org/pypi/contest/)
 [![Build Status](https://github.com/Lnk2past/contest/workflows/Build/badge.svg)](https://github.com/Lnk2past/contest/actions)
-[![Travis (.com)](https://img.shields.io/travis/com/Lnk2past/contest?label=Build&logo=travis)](https://travis-ci.org/Lnk2past/contest)
 
 A `CON`sole application `TEST`er
 
@@ -29,24 +28,23 @@ YAML is the preferred choice of input for `contest` for a few reasons, but most 
 ```python
 executable:
 test-cases:
-    standard:
-        scrub-env:
-        env:
-        executable:
-        returncode:
-        argv: []
-        stdin: |
-        stdout: |
-        stderr: |
-        ofstreams:
-            - base-file:
+    - name:
+      scrub-env:
+      env:
+      executable:
+      returncode:
+      argv: []
+      stdin: |
+      stdout: |
+      stderr: |
+      ofstreams:
+          - base-file:
               test-file:
-        extra-tests: []
+      extra-tests: []
 ```
 
 ## Development Environment
 I am coding this to work with latest Python. I have ~~absolutely no~~ little interest in backwards compatibility. While earlier versions and standards may work right now, I do not guarantee any of that moving forward. I will not hinder development for the sake of supporting something older (exceptions are for requirements on the servers for my classes, e.g. PyYAML v3.12).
-
 
 ## Basic Usage
 Given some configuration you can run `contest` using the following:
@@ -59,12 +57,12 @@ This will parse the configuration and run the specified test cass(s). In the con
 ```
 executable: hello_world.exe
 test-cases:
-    standard:
-        stdin: |
-            Lnk2past
-        stdout: |
-            Hello! What is your name?
-            Welcome to the world, Lnk2past!
+    - name: standard
+      stdin: |
+          Lnk2past
+      stdout: |
+          Hello! What is your name?
+          Welcome to the world, Lnk2past!
 ```
 
 Let us break down what this is specifying:
