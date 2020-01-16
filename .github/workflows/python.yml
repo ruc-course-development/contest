@@ -10,10 +10,8 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: 3.7
-    - run: |
-        python -m pip install flake8
-    - run: |
-        flake8
+    - run: python -m pip install flake8
+    - run: flake8
   build-tests:
     needs: static-analysis
     runs-on: ${{ matrix.os }}
@@ -27,9 +25,10 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install PyYAML
+      run: python -m pip install pyyaml
     - name: Install Contest
-      run: |
-        python setup.py install
+      run: python setup.py install
     - name: Build Tests
       run: |
         cd examples
