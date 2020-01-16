@@ -71,7 +71,7 @@ class TestCase():
             errors = 0
             try:
                 proc = run(self.test_args, input=self.stdin, stdout=PIPE, stderr=PIPE, cwd=pathlib.Path.cwd(),
-                    timeout=self.timeout, universal_newlines=True, env=self.env)
+                           timeout=self.timeout, universal_newlines=True, env=self.env)
             except TimeoutExpired:
                 logger.critical('Your program took too long to run! Perhaps you have an infinite loop?', extra=logger_format_fields)
                 errors += 1
