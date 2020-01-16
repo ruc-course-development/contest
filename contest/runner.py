@@ -29,7 +29,7 @@ def filter_tests(case_name, includes, excludes):
     """
     for re_filter in excludes:
         if re.search(re_filter, case_name):
-            logger.debug('Excluding {}, matches pattern {}'.format(case_name, re_filter), extra=logger_format_fields)
+            logger.debug(f'Excluding {case_name}, matches pattern {re_filter}', extra=logger_format_fields)
             return False
 
     if not includes:
@@ -37,7 +37,7 @@ def filter_tests(case_name, includes, excludes):
 
     for re_filter in includes:
         if re.search(re_filter, case_name):
-            logger.debug('Including {}, matches pattern {}'.format(case_name, re_filter), extra=logger_format_fields)
+            logger.debug(f'Including {case_name}, matches pattern {re_filter}', extra=logger_format_fields)
             return True
     return False
 
@@ -50,22 +50,23 @@ def test():
     parser.add_argument('--filters', default=[], nargs='+', help='regex pattern for tests to match')
     parser.add_argument('--exclude-filters', default=[], nargs='+', help='regex pattern for tests to match')
     parser.add_argument('--verbose', action='store_true', default=False, help='verbose output')
-    parser.add_argument('--version', action='version', version='contest.py v{}'.format(__version__.__version__))
+    parser.add_argument('--version', action='version', version=f'contest.py v{__version__.__version__}')
     inputs = parser.parse_args()
 
     setup_logger(inputs.verbose)
     logger_format_fields['test_case'] = 'contest'
 
-    logger.critical('Loading {}'.format(inputs.configuration), extra=logger_format_fields)
+    logger.critical(f'Loading {inputs.configuration}', extra=logger_format_fields)
     test_matrix = yaml.load(open(inputs.configuration, 'r'), Loader=DefaultLoader)
+    logger.debug(f'{inputs.configuration} Loaded', extra=logger_format_fields)
     executable = test_matrix.get('executable', '')
+    logger.debug(f'Root executable: {executable}', extra=logger_format_fields)
 
     number_of_tests = len(test_matrix['test-cases'])
-    logger.critical('Found {} tests'.format(number_of_tests), extra=logger_format_fields)
-
+    logger.critical(f'Found {number_of_tests} tests', extra=logger_format_fields)
     test_cases = [case for case in test_matrix['test-cases'] if filter_tests(case['name'], inputs.filters, inputs.exclude_filters)]
     number_of_tests_to_run = len(test_cases)
-    logger.critical('Running {} tests'.format(number_of_tests_to_run), extra=logger_format_fields)
+    logger.critical(f'Running {number_of_tests_to_run} tests', extra=logger_format_fields)
 
     tests = []
     for test_case in test_cases:
@@ -94,7 +95,7 @@ def test():
 
     logger_format_fields['test_case'] = 'contest'
 
-    logger.critical('{}/{} tests passed!'.format(tests_run-errors, tests_run), extra=logger_format_fields)
+    logger.critical(f'{tests_run-errors}/{tests_run} tests passed!', extra=logger_format_fields)
     return errors
 
 
