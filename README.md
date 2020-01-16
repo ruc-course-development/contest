@@ -1,6 +1,7 @@
 # contest
 [![PyPI version shields.io](https://img.shields.io/pypi/v/contest.svg)](https://pypi.python.org/pypi/contest/)
 ![Python](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-red)
+![Platforms](https://img.shields.io/badge/platform-windows%20%7C%20mac%20%7C%20linux-yellow)
 [![Build Status](https://github.com/Lnk2past/contest/workflows/Build/badge.svg)](https://github.com/Lnk2past/contest/actions)
 
 
