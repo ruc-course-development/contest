@@ -56,16 +56,14 @@ class TestCase:
             spec['text'] = stream.splitlines(keepends=True)
         elif isinstance(stream, list):
             spec['text'] = stream
-        else:
+        elif isinstance(stream, dict) and 'text' in spec:
             spec['text'] = spec['text'].splitlines(keepends=True)
-
-        if 'file' in stream:
-            spec['text'] = open(stream['file'])
+        elif not isinstance(stream, dict):
+            raise RuntimeError('output streams must be a dictionary, string, or a list!') 
         if 'start' not in spec:
             spec['start'] = 0
         if 'count' not in spec:
             spec['count'] = -1
-
         return spec
 
     def _setup_ofstream(self, stream):
@@ -110,15 +108,20 @@ class TestCase:
                 logger.critical('Your program took too long to run! Perhaps you have an infinite loop?', extra=logger_format_fields)
                 errors += 1
 
-            errors += self.check_streams('stdout', self.stdout, proc.stdout.splitlines(keepends=True))
-            errors += self.check_streams('stderr', self.stderr, proc.stderr.splitlines(keepends=True))
-
             if self.return_code and int(self.return_code) != proc.returncode:
                 logger.critical(f'FAILURE:\n         Expected return code {self.return_code}, received {proc.returncode}', extra=logger_format_fields)
                 errors += 1
 
+            if 'file' in self.stdout: self.stdout['text'] = open(self.stdout['file'])
+            if 'file' in self.stderr: self.stderr['text'] = open(self.stderr['file'])
+
+            errors += self.check_streams('stdout', self.stdout, proc.stdout.splitlines(keepends=True))
+            errors += self.check_streams('stderr', self.stderr, proc.stderr.splitlines(keepends=True))
+
             for ofstream in self.ofstreams:
-                errors += self.check_streams(base_file, ofstream['text'], open(ofstream['test-file'], 'r'))
+                if 'file' in ofstream:
+                    ofstream['text'] = open(ofstream['file'])
+                errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'r'))
 
             for extra_test in self.extra_tests:
                 logger.debug(f'Running extra test: {extra_test}', extra=logger_format_fields)
@@ -159,12 +162,10 @@ class TestCase:
                 continue
             logger.debug(f'{stream} line {line_number}:\n"{e}"\n"{r}"\n', extra=logger_format_fields)
             if e != r:
-                if e is None:
+                if None in [e, r]:
                     logger.critical(f'ERROR: Expected and received streams do not have equal length!', extra=logger_format_fields)
-                    e = ''
-                if r is None:
-                    logger.critical(f'ERROR: Expected and received streams do not have equal length!', extra=logger_format_fields)
-                    r = ''
+                    e = '' if e is None else e
+                    r = '' if r is None else r
                 i = 0
                 while True:
                     s1 = e[i:i+5]
