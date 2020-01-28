@@ -1,9 +1,0 @@
-executable: hello_world.exe
-test-cases:
-    - name: standard
-      stdin: ["Lnk2past"]
-      stdout:
-        text: |
-          Hello! What is your name?
-        start: 0
-        count: 1
