@@ -1,6 +1,5 @@
 import os
 import pathlib
-import re
 from itertools import zip_longest
 from subprocess import run, PIPE, TimeoutExpired
 from contest.utilities import chdir
@@ -48,7 +47,7 @@ class TestCase:
             return os.linesep.join(stream)
         elif isinstance(stream, str):
             return stream
-        raise RuntimeError('input streams must be a string or a list!') 
+        raise RuntimeError('input streams must be a string or a list!')
 
     def _setup_ostream(self, stream):
         spec = stream if isinstance(stream, dict) else {}
@@ -59,7 +58,7 @@ class TestCase:
         elif isinstance(stream, dict) and 'text' in spec:
             spec['text'] = spec['text'].splitlines(keepends=True)
         elif not isinstance(stream, dict):
-            raise RuntimeError('output streams must be a dictionary, string, or a list!') 
+            raise RuntimeError('output streams must be a dictionary, string, or a list!')
         if 'start' not in spec:
             spec['start'] = 0
         if 'count' not in spec:
@@ -71,7 +70,7 @@ class TestCase:
             if 'file' in stream:
                 stream['file'] = os.path.join('..', '..', stream['file'])
             return self._setup_ostream(stream)
-        raise RuntimeError('output file streams must be a dictionary!') 
+        raise RuntimeError('output file streams must be a dictionary!')
 
     def _setup_test_process(self):
         """Properly sets the relative paths for the executable and contructs the
@@ -112,8 +111,10 @@ class TestCase:
                 logger.critical(f'FAILURE:\n         Expected return code {self.return_code}, received {proc.returncode}', extra=logger_format_fields)
                 errors += 1
 
-            if 'file' in self.stdout: self.stdout['text'] = open(self.stdout['file'])
-            if 'file' in self.stderr: self.stderr['text'] = open(self.stderr['file'])
+            if 'file' in self.stdout:
+                self.stdout['text'] = open(self.stdout['file'])
+            if 'file' in self.stderr:
+                self.stderr['text'] = open(self.stderr['file'])
 
             errors += self.check_streams('stdout', self.stdout, proc.stdout.splitlines(keepends=True))
             errors += self.check_streams('stderr', self.stderr, proc.stderr.splitlines(keepends=True))
