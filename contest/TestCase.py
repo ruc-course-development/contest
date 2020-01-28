@@ -1,12 +1,14 @@
+import os
 import pathlib
 import re
+from itertools import zip_longest
 from subprocess import run, PIPE, TimeoutExpired
 from contest.utilities import chdir
 from contest.utilities.importer import import_from_source
 from contest.utilities.logger import logger, logger_format_fields
 
 
-class TestCase():
+class TestCase:
     def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, env, extra_tests, timeout, test_home):
         """Initialize test case inputs
 
@@ -29,10 +31,10 @@ class TestCase():
         self.exe = exe
         self.return_code = return_code
         self.argv = [a for a in argv]
-        self.stdin = stdin
-        self.stdout = stdout
-        self.stderr = stderr
-        self.ofstreams = ofstreams
+        self.stdin = self._setup_istream(stdin)
+        self.stdout = self._setup_ostream(stdout)
+        self.stderr = self._setup_ostream(stderr)
+        self.ofstreams = [self._setup_ofstream(ofs) for ofs in ofstreams]
         self.env = env
         self.extra_tests = extra_tests
         self.timeout = timeout
@@ -40,6 +42,38 @@ class TestCase():
         pathlib.Path(self.test_home).mkdir(parents=True, exist_ok=True)
 
         self.test_args = self._setup_test_process()
+
+    def _setup_istream(self, stream):
+        if isinstance(stream, list):
+            return os.linesep.join(stream)
+        elif isinstance(stream, str):
+            return stream
+        raise RuntimeError('input streams must be a string or a list!') 
+
+    def _setup_ostream(self, stream):
+        spec = stream if isinstance(stream, dict) else {}
+        if isinstance(stream, str):
+            spec['text'] = stream.splitlines(keepends=True)
+        elif isinstance(stream, list):
+            spec['text'] = stream
+        else:
+            spec['text'] = spec['text'].splitlines(keepends=True)
+
+        if 'file' in stream:
+            spec['text'] = open(stream['file'])
+        if 'start' not in spec:
+            spec['start'] = 0
+        if 'count' not in spec:
+            spec['count'] = -1
+
+        return spec
+
+    def _setup_ofstream(self, stream):
+        if isinstance(stream, dict):
+            if 'file' in stream:
+                stream['file'] = os.path.join('..', '..', stream['file'])
+            return self._setup_ostream(stream)
+        raise RuntimeError('output file streams must be a dictionary!') 
 
     def _setup_test_process(self):
         """Properly sets the relative paths for the executable and contructs the
@@ -76,19 +110,15 @@ class TestCase():
                 logger.critical('Your program took too long to run! Perhaps you have an infinite loop?', extra=logger_format_fields)
                 errors += 1
 
-            errors += self.check_streams('stdout', self.stdout, proc.stdout)
-            errors += self.check_streams('stderr', self.stderr, proc.stderr)
+            errors += self.check_streams('stdout', self.stdout, proc.stdout.splitlines(keepends=True))
+            errors += self.check_streams('stderr', self.stderr, proc.stderr.splitlines(keepends=True))
 
             if self.return_code and int(self.return_code) != proc.returncode:
                 logger.critical(f'FAILURE:\n         Expected return code {self.return_code}, received {proc.returncode}', extra=logger_format_fields)
                 errors += 1
 
             for ofstream in self.ofstreams:
-                test_file = ofstream['test-file']
-                base_file = pathlib.Path('..', '..', ofstream['base-file'])
-                if test_file and base_file:
-                    with open(test_file, 'r') as tfile, open(base_file, 'r') as pfile:
-                        errors += self.check_streams(base_file, tfile.read(), pfile.read())
+                errors += self.check_streams(base_file, ofstream['text'], open(ofstream['test-file'], 'r'))
 
             for extra_test in self.extra_tests:
                 logger.debug(f'Running extra test: {extra_test}', extra=logger_format_fields)
@@ -108,21 +138,37 @@ class TestCase():
 
         Arguments:
             stream (str): name of stream being tested
-            expected (str): expected content of stream
+            expected (dict): expected content of stream and details for comparing
             received (str): stream output from the test
 
         Returns:
-            0 for no errror, 1 for error
+            0 for no error, 1 for error
         """
         logger.debug(f'Comparing {stream} streams line by line', extra=logger_format_fields)
-        for line_number, (e, r) in enumerate(zip(re.split('\n+', expected), re.split('\n+', received))):
+
+        if 'empty' in expected:
+            if expected['empty'] and received:
+                logger.critical(f'FAILURE:\nExpected {stream} to be empty', extra=logger_format_fields)
+                return 1
+            elif not expected['empty'] and not received:
+                logger.critical(f'FAILURE:\nExpected {stream} to be nonempty', extra=logger_format_fields)
+                return 1
+
+        for line_number, (e, r) in enumerate(zip_longest(expected['text'], received)):
+            if line_number < expected['start']:
+                continue
             logger.debug(f'{stream} line {line_number}:\n"{e}"\n"{r}"\n', extra=logger_format_fields)
             if e != r:
+                if e is None:
+                    logger.critical(f'ERROR: Expected and received streams do not have equal length!', extra=logger_format_fields)
+                    e = ''
+                if r is None:
+                    logger.critical(f'ERROR: Expected and received streams do not have equal length!', extra=logger_format_fields)
+                    r = ''
                 i = 0
                 while True:
                     s1 = e[i:i+5]
                     s2 = r[i:i+5]
-
                     if not s1 == s2:
                         for idx, (a, b) in enumerate(zip(s1, s2)):
                             if not a == b:
@@ -131,11 +177,13 @@ class TestCase():
                         else:
                             i = i + min(len(s1), len(s2))
                         break
-
                     i = i + 5
                 e = f'        Expected "{e}"'
                 r = f'        Received "{r}"'
                 error_location = (' '*18) + (' '*i) + '^ ERROR'
                 logger.critical(f'FAILURE:\n{e}\n{r}\n{error_location}', extra=logger_format_fields)
                 return 1
+            if line_number - expected['start'] + 1 == expected['count']:
+                logger.debug(f'Checked {expected["count"]} lines, breaking', extra=logger_format_fields)
+                break
         return 0

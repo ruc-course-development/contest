@@ -77,7 +77,7 @@ def test():
                               test_case.get('stdin', ''),
                               test_case.get('stdout', ''),
                               test_case.get('stderr', ''),
-                              test_case.get('ofstreams', {}),
+                              test_case.get('ofstreams', []),
                               test_case.get('env', {}) if test_case.get('scrub-env', False) else {**os.environ, **test_case.get('env', {})},
                               test_case.get('extra-tests', []),
                               test_case.get('timeout', None),
