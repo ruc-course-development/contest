@@ -1,7 +1,7 @@
 executable: numbers.exe
 test-cases:
     - name: standard
-      argv: ["7"]
+      argv: "7"
       ofstreams:
-          - base-file: contest_sample.dat
-            test-file: sample.dat
+          - test-file: sample.dat
+            file: contest_sample.dat

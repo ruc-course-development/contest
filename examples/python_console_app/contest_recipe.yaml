@@ -3,8 +3,7 @@ test-cases:
     - name: standard
       env: 
           greeting: Hello World!
-      stdin: |
-          I want to be a Jedi
+      stdin: I want to be a Jedi
       stdout: |
           Hello World!
           Let us make a wish! "I want to be a Jedi" is your wish? Keep dreaming
