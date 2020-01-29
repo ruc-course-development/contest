@@ -29,7 +29,7 @@ class TestCase:
         self.case_name = case_name
         self.exe = exe
         self.return_code = return_code
-        self.argv = [a for a in argv]
+        self.argv = argv
         self.stdin = self._setup_istream(stdin)
         self.stdout = self._setup_ostream(stdout)
         self.stderr = self._setup_ostream(stderr)
