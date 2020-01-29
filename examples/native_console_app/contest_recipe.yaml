@@ -1,8 +1,7 @@
 executable: hello_world.exe
 test-cases:
     - name: standard
-      stdin: |
-          Lnk2past
+      stdin: Lnk2past
       stdout: |
           Hello! What is your name?
           Welcome to the world, Lnk2past!

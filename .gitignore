@@ -3,6 +3,7 @@
 *.o
 *.pyc
 .vscode
-build/**
-dist/**
-contest.egg-info/**
+test_output
+build
+dist
+contest.egg-info
