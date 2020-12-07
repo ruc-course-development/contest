@@ -120,9 +120,10 @@ class TestCase:
             errors += self.check_streams('stderr', self.stderr, proc.stderr.splitlines(keepends=True))
 
             for ofstream in self.ofstreams:
+                file_mode = 'rb' if ('binary' in ofstream and ofstream['binary']) else 'r'
                 if 'file' in ofstream:
-                    ofstream['text'] = open(ofstream['file'])
-                errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'r'))
+                    ofstream['text'] = open(ofstream['file'], file_mode)
+                errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], file_mode))
 
             for extra_test in self.extra_tests:
                 logger.debug(f'Running extra test: {extra_test}', extra=logger_format_fields)
