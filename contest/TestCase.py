@@ -165,7 +165,7 @@ class TestCase:
             logger.debug(f'{stream} line {line_number}:\n"{e}"\n"{r}"\n', extra=logger_format_fields)
             if e != r:
                 if None in [e, r]:
-                    logger.critical(f'ERROR: Expected and received streams do not have equal length!', extra=logger_format_fields)
+                    logger.critical('ERROR: Expected and received streams do not have equal length!', extra=logger_format_fields)
                     e = '' if e is None else e
                     r = '' if r is None else r
                 i = 0
