@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/Lnk2past/contest/workflows/Build/badge.svg)](https://github.com/Lnk2past/contest/actions)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/contest.svg)](https://pypi.python.org/pypi/contest/)
-![Python](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8-red)
+![Python](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-red)
 ![Platforms](https://img.shields.io/badge/platform-windows%20%7C%20mac%20%7C%20linux-yellow)
 
 A `CON`sole application `TEST`er
@@ -13,7 +13,7 @@ A `CON`sole application `TEST`er
 
 ### Motivation
 
-I wrote this for a class that I teach to help with grading. Given the configuration driven nature of it (how else should a testing framework/tool work?) `contest` lets me define multiple test cases for particular programs (assignments) so that not only is grading easier for me, but I can integrate assignments into a grading pipeline so that I can do as little work as possible and my students can get immediate feedback on submissions. Assignments here are usually single-file programs that are not necessarily unit-testable without adding in boilderplate and nonstandard language features. Letting students build normal programs and then verify their behavior is the goal.
+I wrote this for a class that I teach to help with grading. Given the configuration driven nature of it (how else should a testing framework/tool work?) `contest` lets me define multiple test cases for particular programs (assignments) so that not only is grading easier for me, but I can integrate assignments into a grading pipeline so that I can do as little work as possible and my students can get immediate feedback on submissions. Assignments here are usually single-file programs that are not necessarily unit-testable without adding in boilerplate and nonstandard language features. Letting students build normal programs and then verify their behavior is the goal.
 
 ## Installation
 
