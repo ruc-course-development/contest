@@ -70,18 +70,23 @@ def test():
 
     tests = []
     for test_case in test_cases:
-        tests.append(TestCase(test_case['name'],
-                              test_case.get('executable', executable),
-                              test_case.get('return-code', None),
-                              test_case.get('argv', []),
-                              test_case.get('stdin', ''),
-                              test_case.get('stdout', ''),
-                              test_case.get('stderr', ''),
-                              test_case.get('ofstreams', []),
-                              test_case.get('env', {}) if test_case.get('scrub-env', False) else {**os.environ, **test_case.get('env', {})},
-                              test_case.get('extra-tests', []),
-                              test_case.get('timeout', None),
-                              os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case['name'])))
+        tests.append(
+            TestCase(
+                test_case['name'],
+                test_case.get('executable', executable),
+                test_case.get('return-code', None),
+                test_case.get('argv', []),
+                test_case.get('stdin', ''),
+                test_case.get('stdout', ''),
+                test_case.get('stderr', ''),
+                test_case.get('ofstreams', []),
+                test_case.get('env', {}) if test_case.get('scrub-env', False) else {**os.environ, **test_case.get('env', {})},
+                test_case.get('extra-tests', []),
+                test_case.get('timeout', None),
+                os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case['name']),
+                test_case.get('resources', []),
+            )
+        )
 
     errors = 0
     tests_run = 0

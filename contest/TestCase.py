@@ -1,5 +1,6 @@
 import os
 import pathlib
+import shutil
 from itertools import zip_longest
 from subprocess import run, PIPE, TimeoutExpired
 from contest.utilities import chdir
@@ -8,7 +9,7 @@ from contest.utilities.logger import logger, logger_format_fields
 
 
 class TestCase:
-    def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, env, extra_tests, timeout, test_home):
+    def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, env, extra_tests, timeout, test_home, resources):
         """Initialize test case inputs
 
         Arguments:
@@ -23,6 +24,7 @@ class TestCase:
             env (dict): dictionary of environment variables to set in the execution space
             extra_tests (list): list of additional modules to load for testing
             test_home (str): directory to run the test out of
+            resources (list): list of resources to copy to the test directory
         """
         logger_format_fields['test_case'] = case_name
         logger.debug(f'Constructing test case {case_name}', extra=logger_format_fields)
@@ -39,6 +41,8 @@ class TestCase:
         self.timeout = timeout
         self.test_home = test_home
         pathlib.Path(self.test_home).mkdir(parents=True, exist_ok=True)
+        for resource in resources:
+            shutil.copytree(resource, pathlib.Path(self.test_home)/resource, dirs_exist_ok=True)
 
         self.test_args = self._setup_test_process()
 
