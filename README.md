@@ -41,7 +41,7 @@ test-cases:                 # !!seq, list of all test cases
     - name:                 # !!str, name of the test
       scrub-env:            # !!bool, flag to remove the current environment
       env:                  # !!map, environment variables to set
-      resources:            # !!seq, list of resources to copy to the test directory
+      resources:            # !!seq, list of resources to copy to the test directory, need to provide a src and dst
       executable:           # !!str, name of the executable to use for this test case only
       argv:                 # !!seq, list of arguments to pass to the executable
       stdin:                # !!str || !!seq inputs to standard input stream

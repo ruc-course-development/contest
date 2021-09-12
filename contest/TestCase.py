@@ -42,7 +42,7 @@ class TestCase:
         self.test_home = test_home
         pathlib.Path(self.test_home).mkdir(parents=True, exist_ok=True)
         for resource in resources:
-            shutil.copytree(resource, pathlib.Path(self.test_home)/resource)
+            shutil.copytree(resource['src'], pathlib.Path(self.test_home)/resource['dst'])
 
         self.test_args = self._setup_test_process()
 
