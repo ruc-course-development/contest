@@ -40,6 +40,7 @@ class TestCase:
         self.extra_tests = extra_tests
         self.timeout = timeout
         self.test_home = test_home
+        shutil.rmtree(self.test_home, ignore_errors=True)
         pathlib.Path(self.test_home).mkdir(parents=True, exist_ok=True)
         for resource in resources:
             shutil.copytree(resource['src'], pathlib.Path(self.test_home)/resource['dst'])
