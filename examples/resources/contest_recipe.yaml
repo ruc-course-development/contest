@@ -1,0 +1,7 @@
+executable: python foobarbaz.py
+test-cases:
+    - name: standard
+      resources:
+        - data
+      stdout: |
+          This is the text from some file in data!
