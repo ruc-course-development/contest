@@ -1,0 +1,8 @@
+executable: python foobarbaz.py
+test-cases:
+    - name: standard
+      resources:
+        - src: examples/resources/data
+          dst: data
+      stdout: |
+          This is the text from some file in data!

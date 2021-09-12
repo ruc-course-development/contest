@@ -31,7 +31,7 @@ python setup.py install
 
 ### Overview
 
-YAML is the preferred choice of input for `contest` for a few reasons, but most notably for its easy to follow syntax and allowance of multiline strings (sorry JSON). `contest` consumes an input file that specifies at least one executable and then whatever additional information is provided. Check out the test skeleton below to see what can be specified; the main ones though are the input and output streams `stdout`, `stderr`, and `stderr` as well and CLI inputs `argv`. You can specify newly generated files that you expect to be created and even go further and specify custom tests (as `Python` files) that cover the things simple I/O comparisons do not. Lastly, you may also specify environment variables to be set during the execution; and you may also scrub the environment before adding custom keys. Note that scrubbing the environment may prevent your executable from running altogether! For now you are better off allowing your current environment to persist and simply overwrite what needs to be set. Environment variables specified within a test-case take precedence over what is in your current environmnt.
+YAML is the preferred choice of input for `contest` for a few reasons, but most notably for its easy to follow syntax and allowance of multiline strings (sorry JSON). `contest` consumes an input file that specifies at least one executable and then whatever additional information is provided. Check out the test skeleton below to see what can be specified; the main ones though are the input and output streams `stdout`, `stderr`, and `stderr` as well and CLI inputs `argv`. You can specify newly generated files that you expect to be created and even go further and specify custom tests (as `Python` files) that cover the things simple I/O comparisons do not. Lastly, you may also specify environment variables to be set during the execution; and you may also scrub the environment before adding custom keys. Note that scrubbing the environment may prevent your executable from running altogether! For now you are better off allowing your current environment to persist and simply overwrite what needs to be set. Environment variables specified within a test-case take precedence over what is in your current environment.
 
 #### Test Skeleton
 
@@ -41,6 +41,7 @@ test-cases:                 # !!seq, list of all test cases
     - name:                 # !!str, name of the test
       scrub-env:            # !!bool, flag to remove the current environment
       env:                  # !!map, environment variables to set
+      resources:            # !!seq, list of resources to copy to the test directory, need to provide a src and dst
       executable:           # !!str, name of the executable to use for this test case only
       argv:                 # !!seq, list of arguments to pass to the executable
       stdin:                # !!str || !!seq inputs to standard input stream
@@ -87,7 +88,7 @@ Given some configuration you can run `contest` using the following:
 contest <path to configuration file>
 ```
 
-This will parse the configuration and run the specified test cass(s). In the configuration file each test case is defined under the `test-cases` node in the recipe; simply add a new section as desired. You will just need to make sure each test is named uniquely. Here is an example of a test recipe (taken from `examples/native_console_app`):
+This will parse the configuration and run the specified test case(s). In the configuration file each test case is defined under the `test-cases` node in the recipe; simply add a new section as desired. You will just need to make sure each test is named uniquely. Here is an example of a test recipe (taken from `examples/native_console_app`):
 
 ```yaml
 executable: hello_world.exe
@@ -102,30 +103,37 @@ test-cases:
 Let us break down what this is specifying:
 
 1. The name of the `executable` to run is
-    ```
+
+    ```text
     hello_world.exe
     ```
+
 2. We have a single test-case named
-    ```
+
+    ```text
     standard
     ```
+
 3. We define the input to `stdin`, which is a single entry:
-    ```
+
+    ```text
     Lnk2past
     ```
+
 4. We define the output to `stdout`, which is:
-    ```
+
+    ```text
     Hello! What is your name?
     Welcome to the world, Lnk2past!
     ```
 
 This is really the equivalent of the following in some shell environment:
-```
+
+```shell
 ~/project> ./hello_world.exe
 Hello! What is your name?
 Lnk2past
 Welcome to the world, Lnk2past!
-~/project>
 ```
 
 This means that when running the executable `hello_world.exe` we can expect the input in step 3 to yield the output in step 4. `contest` does this comparison for you! This allows you to write tests that would reflect actual use cases of your executable. Add as many tests as you like to cover various pathways through your program and to cover the various errors your program may encounter.
@@ -134,9 +142,9 @@ Check out the other examples under the `examples` directory.
 
 ### Test Directories
 
-`contest` will run each test-case in a separate directory, and will create those directories in the same directory containing the test recipe. This ensures minimal conflict between test cases. For example, if your test recipe contains test cases "foo" and "bar" and is located in "C:\Users\Lnk2past\MyProject", then you can expact the following directory structure:
+`contest` will run each test-case in a separate directory, and will create those directories in the same directory containing the test recipe. This ensures minimal conflict between test cases. For example, if your test recipe contains test cases "foo" and "bar" and is located in "C:\Users\Lnk2past\MyProject", then you can expect the following directory structure:
 
-```
+```text
 C:\Users\Lnk2past\MyProject\
 |---src\...
 |---include\...
@@ -152,7 +160,7 @@ Even if your test-case produces no output on disk, the test-output directory wil
 
 You can filter your test-recipes to only run a select few. This may be useful during debugging to only run your new test without needing to run the entire test recipe. You can do this via the `--filter` option. This expects some `regular expression` to filter on. e.g. we can test only those tests that are marked with a specific keyword in their names, say "tracking", by doing the following:
 
-```
+```shell
 contest test_recipe.yaml --filter "tracking"
 ```
 

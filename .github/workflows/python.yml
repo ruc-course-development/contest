@@ -38,8 +38,9 @@ jobs:
       run: |
         contest examples/many_cases/contest_recipe.yaml --verbose
         contest examples/native_console_app/contest_recipe.yaml --verbose
-        # contest examples/output_file/contest_recipe.yaml --verbose
-        # contest examples/python_console_app/contest_recipe.yaml --verbose
+        contest examples/output_file/contest_recipe.yaml --verbose
+        contest examples/python_console_app/contest_recipe.yaml --verbose
+        contest examples/resources/contest_recipe.yaml --verbose
   publish:
     needs: build-tests
     runs-on: ubuntu-latest
