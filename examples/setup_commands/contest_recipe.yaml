@@ -1,0 +1,7 @@
+executable: python foobarbaz.py
+test-cases:
+    - name: standard
+      setup:
+         - python setup.py
+      stdout: |
+          hello world!

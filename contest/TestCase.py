@@ -9,7 +9,23 @@ from contest.utilities.logger import logger, logger_format_fields
 
 
 class TestCase:
-    def __init__(self, case_name, exe, return_code, argv, stdin, stdout, stderr, ofstreams, env, extra_tests, timeout, test_home, resources):
+    def __init__(
+        self,
+        case_name,
+        exe,
+        return_code,
+        argv,
+        stdin,
+        stdout,
+        stderr,
+        ofstreams,
+        env,
+        extra_tests,
+        timeout,
+        test_home,
+        resources,
+        setup
+    ):
         """Initialize test case inputs
 
         Arguments:
@@ -25,6 +41,7 @@ class TestCase:
             extra_tests (list): list of additional modules to load for testing
             test_home (str): directory to run the test out of
             resources (list): list of resources to copy to the test directory
+            setup (list): list of commands to run before executing the core test
         """
         logger_format_fields['test_case'] = case_name
         logger.debug(f'Constructing test case {case_name}', extra=logger_format_fields)
@@ -40,12 +57,19 @@ class TestCase:
         self.extra_tests = extra_tests
         self.timeout = timeout
         self.test_home = test_home
+        self.setup = setup
+
         shutil.rmtree(self.test_home, ignore_errors=True)
         pathlib.Path(self.test_home).mkdir(parents=True, exist_ok=True)
         for resource in resources:
             shutil.copytree(resource['src'], pathlib.Path(self.test_home)/resource['dst'])
 
-        self.test_args = self._setup_test_process()
+        self.test_args = self._setup_test_process(self.exe, self.argv)
+        for step in self.setup:
+            step = self._setup_test_process(step)
+            with chdir.ChangeDirectory(self.test_home):
+                logger.debug(f'Running setup: {step}', extra=logger_format_fields)
+                run(step, stdout=PIPE, stderr=PIPE, cwd=pathlib.Path.cwd())
 
     def _setup_istream(self, stream):
         if isinstance(stream, list):
@@ -77,15 +101,15 @@ class TestCase:
             return self._setup_ostream(stream)
         raise RuntimeError('output file streams must be a dictionary!')
 
-    def _setup_test_process(self):
+    def _setup_test_process(self, cmd, argv=[]):
         """Properly sets the relative paths for the executable and contructs the
         argument list for the executable.
 
         Returns:
             list of the executable and arguments to be passed to subprocess.run
         """
-        splexe = self.exe.split()
-        splexe.extend(self.argv)
+        splexe = cmd.split()
+        splexe.extend(argv)
         for idx, sp in enumerate(splexe):
             sp = pathlib.Path(self.test_home, '..', '..', sp)
             if sp.exists():

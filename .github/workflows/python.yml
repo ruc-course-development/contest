@@ -41,6 +41,7 @@ jobs:
         contest examples/output_file/contest_recipe.yaml --verbose
         contest examples/python_console_app/contest_recipe.yaml --verbose
         contest examples/resources/contest_recipe.yaml --verbose
+        contest examples/setup_commands/contest_recipe.yaml --verbose
   publish:
     needs: build-tests
     runs-on: ubuntu-latest

@@ -85,6 +85,7 @@ def test():
                 test_case.get('timeout', None),
                 os.path.join(os.path.dirname(inputs.configuration), 'test_output', test_case['name']),
                 test_case.get('resources', []),
+                test_case.get('setup', []),
             )
         )
 
