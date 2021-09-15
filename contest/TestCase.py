@@ -3,6 +3,9 @@ import pathlib
 import shutil
 from itertools import zip_longest
 from subprocess import run, PIPE, TimeoutExpired
+
+from PIL import Image, ImageChops
+
 from contest.utilities import chdir
 from contest.utilities.importer import import_from_source
 from contest.utilities.logger import logger, logger_format_fields
@@ -149,10 +152,21 @@ class TestCase:
             errors += self.check_streams('stderr', self.stderr, proc.stderr.splitlines(keepends=True))
 
             for ofstream in self.ofstreams:
-                file_mode = 'rb' if ('binary' in ofstream and ofstream['binary']) else 'r'
-                if 'file' in ofstream:
-                    ofstream['text'] = open(ofstream['file'], file_mode)
-                errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], file_mode))
+                file_type = ofstream.get('type', 'text')
+                if file_type == 'text':
+                    if 'file' in ofstream:
+                        ofstream['text'] = open(ofstream['file'], 'r')
+                    errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'r'))
+                elif file_type == 'binary':
+                    if 'file' in ofstream:
+                        ofstream['text'] = open(ofstream['file'], 'rb')
+                    errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'rb'))
+                elif file_type == 'image':
+                    f_image = Image.open(ofstream['file'])
+                    t_image = Image.open(ofstream['test-file'])
+                    diff = ImageChops.difference(f_image, t_image)
+                    if diff.getbbox():
+                        errors += 1
 
             for extra_test in self.extra_tests:
                 logger.debug(f'Running extra test: {extra_test}', extra=logger_format_fields)
