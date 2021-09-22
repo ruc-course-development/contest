@@ -151,23 +151,26 @@ class TestCase:
             errors += self.check_streams('stdout', self.stdout, proc.stdout.splitlines(keepends=True))
             errors += self.check_streams('stderr', self.stderr, proc.stderr.splitlines(keepends=True))
 
-            for ofstream in self.ofstreams:
-                file_type = ofstream.get('type', 'text')
-                if file_type == 'text':
-                    if 'file' in ofstream:
-                        ofstream['text'] = open(ofstream['file'], 'r')
-                    errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'r'))
-                elif file_type == 'binary':
-                    if 'file' in ofstream:
-                        ofstream['text'] = open(ofstream['file'], 'rb')
-                    errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'rb'))
-                elif file_type == 'image':
-                    f_image = Image.open(ofstream['file'])
-                    t_image = Image.open(ofstream['test-file'])
-                    diff = ImageChops.difference(f_image, t_image)
-                    if diff.getbbox():
-                        errors += 1
-
+            try:
+                for ofstream in self.ofstreams:
+                    file_type = ofstream.get('type', 'text')
+                    if file_type == 'text':
+                        if 'file' in ofstream:
+                            ofstream['text'] = open(ofstream['file'], 'r')
+                        errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'r'))
+                    elif file_type == 'binary':
+                        if 'file' in ofstream:
+                            ofstream['text'] = open(ofstream['file'], 'rb')
+                        errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'rb'))
+                    elif file_type == 'image':
+                        f_image = Image.open(ofstream['file'])
+                        t_image = Image.open(ofstream['test-file'])
+                        diff = ImageChops.difference(f_image, t_image)
+                        if diff.getbbox():
+                            errors += 1
+            except FileNotFoundError as e:
+                logger.critical(f'FAILURE:\n        Could not find output file {ofstream["test-file"]}', extra=logger_format_fields)
+                errors += 1
             for extra_test in self.extra_tests:
                 logger.debug(f'Running extra test: {extra_test}', extra=logger_format_fields)
                 extra_test = import_from_source(extra_test)
