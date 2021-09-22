@@ -168,7 +168,7 @@ class TestCase:
                         diff = ImageChops.difference(f_image, t_image)
                         if diff.getbbox():
                             errors += 1
-            except FileNotFoundError as e:
+            except FileNotFoundError:
                 logger.critical(f'FAILURE:\n        Could not find output file {ofstream["test-file"]}', extra=logger_format_fields)
                 errors += 1
             for extra_test in self.extra_tests:
