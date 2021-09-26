@@ -154,20 +154,28 @@ class TestCase:
             try:
                 for ofstream in self.ofstreams:
                     file_type = ofstream.get('type', 'text')
+                    logger.debug(f'Performing {file_type} comparison', extra=logger_format_fields)
                     if file_type == 'text':
                         if 'file' in ofstream:
                             ofstream['text'] = open(ofstream['file'], 'r')
-                        errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'r'))
+                        errs = self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'r'))
+                        if errs:
+                            logger.critical(f'Errors found checking streams: {errs}')
+                        errors += errs
                     elif file_type == 'binary':
                         if 'file' in ofstream:
                             ofstream['text'] = open(ofstream['file'], 'rb')
-                        errors += self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'rb'))
+                        errs = self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'rb'))
+                        if errs:
+                            logger.critical(f'Errors found checking binary streams: {errs}')
+                        errors += errs
                     elif file_type == 'image':
                         f_image = Image.open(ofstream['file'])
                         t_image = Image.open(ofstream['test-file'])
                         diff = ImageChops.difference(f_image, t_image)
                         if diff.getbbox():
                             errors += 1
+                            logger.critical('Errors found checking images', extra=logger_format_fields)
             except FileNotFoundError:
                 logger.critical(f'FAILURE:\n        Could not find output file {ofstream["test-file"]}', extra=logger_format_fields)
                 errors += 1
@@ -204,6 +212,11 @@ class TestCase:
             elif not expected['empty'] and not received:
                 logger.critical(f'FAILURE:\nExpected {stream} to be nonempty', extra=logger_format_fields)
                 return 1
+            return 0
+
+        if 'ignore' in expected:
+            logger.debug('Ignoring stream', extra=logger_format_fields)
+            return 0
 
         for line_number, (e, r) in enumerate(zip_longest(expected['text'], received)):
             if line_number < expected['start']:
