@@ -160,14 +160,14 @@ class TestCase:
                             ofstream['text'] = open(ofstream['file'], 'r')
                         errs = self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'r'))
                         if errs:
-                            logger.critical(f'Errors found checking streams: {errs}')
+                            logger.critical(f'Errors found checking streams: {errs}', extra=logger_format_fields)
                         errors += errs
                     elif file_type == 'binary':
                         if 'file' in ofstream:
                             ofstream['text'] = open(ofstream['file'], 'rb')
                         errs = self.check_streams(ofstream['test-file'], ofstream, open(ofstream['test-file'], 'rb'))
                         if errs:
-                            logger.critical(f'Errors found checking binary streams: {errs}')
+                            logger.critical(f'Errors found checking binary streams: {errs}', extra=logger_format_fields)
                         errors += errs
                     elif file_type == 'image':
                         f_image = Image.open(ofstream['file'])
