@@ -67,12 +67,12 @@ class TestCase:
         for resource in resources:
             shutil.copytree(resource['src'], pathlib.Path(self.test_home)/resource['dst'])
 
-        self.test_args = self._setup_test_process(self.exe, self.argv)
         for step in self.setup:
             step = self._setup_test_process(step)
             with chdir.ChangeDirectory(self.test_home):
                 logger.debug(f'Running setup: {step}', extra=logger_format_fields)
                 run(step, stdout=PIPE, stderr=PIPE, cwd=pathlib.Path.cwd())
+        self.test_args = self._setup_test_process(self.exe, self.argv)
 
     def _setup_istream(self, stream):
         if isinstance(stream, list):
