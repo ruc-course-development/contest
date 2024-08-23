@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/Lnk2past/contest/workflows/Build/badge.svg)](https://github.com/Lnk2past/contest/actions)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/contest.svg)](https://pypi.python.org/pypi/contest/)
-![Python](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-red)
+![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-red)
 ![Platforms](https://img.shields.io/badge/platform-windows%20%7C%20mac%20%7C%20linux-yellow)
 
 A `CON`sole application `TEST`er. THIS WHOLE REPO NEEDS AN OVERHAUL!
